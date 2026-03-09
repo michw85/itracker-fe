@@ -1,7 +1,12 @@
-import {createAppSlice} from "../../../app/createAppSlice";
-import type {AuthSliceState, Credentials, UserRegistrationDto,} from "../types";
+import { createAppSlice } from "../../../app/createAppSlice";
+import type {
+  AuthSliceState,
+  Credentials,
+  LoginResponse,
+  UserRegistrationDto,
+} from "../types";
 import * as api from "../services/api";
-import {isAxiosError} from "axios";
+
 
 const initialState: AuthSliceState = {
   isAuthenticated: false,
@@ -12,23 +17,20 @@ export const authSlice = createAppSlice({
   name: "auth",
   initialState,
   reducers: (create) => ({
-    login: create.asyncThunk(
+    login: create.asyncThunk<LoginResponse, Credentials>(
       async (credentials: Credentials) => {
-        return api.fetchLogin(credentials).catch((err) => {
-          if (isAxiosError(err)) {
-            throw new Error(
-              err.response?.data?.message || "Internal Server Error"
-            );
-          }
-        });
+        const response = await api.fetchLogin(credentials);
+        return response;
       },
       {
         pending: (state) => {
           state.isAuthenticated = false;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
           state.loginErrorMessage = undefined;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
@@ -36,7 +38,7 @@ export const authSlice = createAppSlice({
           console.log(action.error);
           state.loginErrorMessage = action.error.message;
         },
-      }
+      },
     ),
 
     register: create.asyncThunk(
@@ -52,11 +54,11 @@ export const authSlice = createAppSlice({
           state.isAuthenticated = true;
           state.user = action.payload;
         },
-        rejected: (state) => {
+        rejected: (state, action) => {
           state.isAuthenticated = false;
-          state.user = undefined;
+          state.loginErrorMessage = action.error.message;
         },
-      }
+      },
     ),
   }),
   // You can define your selectors here. These selectors receive the slice
@@ -79,3 +81,4 @@ export const {
   selectRole,
   selectLoginError,
 } = authSlice.selectors;
+
