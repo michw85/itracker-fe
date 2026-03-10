@@ -1,6 +1,23 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAppSelector } from "../../app/hooks";
+import {
+  logout,
+  selectIsAuthenticated,
+} from "../../features/auth/slice/authSlice";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../app/store";
 
 export default function Header() {
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/");
+  };
+
   return (
     <header className="w-full border-b bg-white shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
@@ -29,18 +46,37 @@ export default function Header() {
           >
             Projects
           </Link>
-          <Link
-            to="/register"
-            className="rounded border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-500 hover:text-black transition"
-          >
-            Sign up
-          </Link>
-          <Link
-            to="/login"
-            className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-800 transition"
-          >
-            Sign in
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="#"
+                className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-800 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="rounded border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-500 hover:text-black transition"
+              >
+                Sign up
+              </Link>
+              <Link
+                to="/login"
+                className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-800 transition"
+              >
+                Sign in
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>
