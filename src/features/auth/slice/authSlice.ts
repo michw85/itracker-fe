@@ -74,10 +74,7 @@ export const authSlice = createAppSlice({
         })
       },
       {
-        pending: (state) => {
-          // state.isAuthenticated = false;
-        },
-        fulfilled: (state, action) => {
+        fulfilled: (state) => {
           state.isAuthenticated = true;
           // state.user = action.payload;
         },
