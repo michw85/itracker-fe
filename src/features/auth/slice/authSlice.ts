@@ -28,7 +28,7 @@ export const authSlice = createAppSlice({
   name: "auth",
   initialState,
   reducers: (create) => ({
-    login: create.asyncThunk(
+    login: create.asyncThunk<LoginResponse, Credentials>(
       async (credentials: Credentials) => {
         return api.fetchLogin(credentials).catch((err) => {
           if (isAxiosError(err)) {
@@ -68,9 +68,9 @@ export const authSlice = createAppSlice({
           state.isAuthenticated = true;
           state.user = action.payload;
         },
-        rejected: (state) => {
+        rejected: (state, action) => {
           state.isAuthenticated = false;
-          state.user = undefined;
+          state.loginErrorMessage = action.error.message;
         },
       },
     ),
@@ -120,3 +120,4 @@ export const {
   selectRole,
   selectLoginError,
 } = authSlice.selectors;
+
