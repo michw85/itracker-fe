@@ -1,22 +1,28 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../app/hooks";
-import {
-  logout,
-  selectIsAuthenticated,
-} from "../../features/auth/slice/authSlice";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../app/store";
+import { logout } from "../../features/auth/slice/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../app/store";
+import { useEffect } from "react";
+
+const AUTH_STORAGE_KEY = "is_authenticated";
 
 export default function Header() {
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  const isAuthenticated: boolean = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
+  
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
   };
+
+  // Синхронизация статуса аутентификации, если она меняется
+  useEffect(() => {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
+  }, [dispatch, isAuthenticated]);
 
   return (
     <header className="w-full border-b bg-white shadow-sm">
