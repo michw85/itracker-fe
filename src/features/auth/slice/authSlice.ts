@@ -7,20 +7,8 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem("is_authenticated");
-    if (!raw) {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 const initialState: AuthSliceState = {
-  isAuthenticated: loadFromLocalStorage(),
+  isAuthenticated: false,
   user: undefined,
 };
 
@@ -28,7 +16,7 @@ export const authSlice = createAppSlice({
   name: "auth",
   initialState,
   reducers: (create) => ({
-    login: create.asyncThunk<LoginResponse, Credentials>(
+    login: create.asyncThunk(
       async (credentials: Credentials) => {
         return api.fetchLogin(credentials).catch((err) => {
           if (isAxiosError(err)) {

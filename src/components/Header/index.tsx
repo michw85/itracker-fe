@@ -2,9 +2,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../../features/auth/slice/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../app/store";
-import { useEffect } from "react";
-
-const AUTH_STORAGE_KEY = "is_authenticated";
 
 export default function Header() {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,11 +15,6 @@ export default function Header() {
     dispatch(logout());
     navigate("/");
   };
-
-  // Синхронизация статуса аутентификации, если она меняется
-  useEffect(() => {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
-  }, [dispatch, isAuthenticated]);
 
   return (
     <header className="w-full border-b bg-white shadow-sm">
