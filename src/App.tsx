@@ -5,8 +5,17 @@ import Layout from "./layouts/Layout";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
+import { useAppDispatch } from "./app/hooks";
+import { useEffect } from "react";
+import { checkAuth } from "./features/auth/slice/authSlice";
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuth());
+  }, [dispatch]);
+
   return (
     <div>
       <nav></nav>
