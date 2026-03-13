@@ -3,6 +3,7 @@ import type {
   AuthSliceState,
   Credentials,
   UserRegistrationDto,
+  User,
 } from "../types";
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
@@ -85,6 +86,31 @@ export const authSlice = createAppSlice({
       }
     ),
 
+getMe: create.asyncThunk(
+  async () => {
+    return api.fetchMe();
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+    rejected: (state) => {
+      state.user = undefined;
+    },
+  }
+),
+ 
+updateProfile: create.asyncThunk(
+  async (dto: Partial<User>) => {
+    return api.fetchUpdateProfile(dto);
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+  }
+),
+
     logout: create.asyncThunk(
       async () => {
         return api.fetchLogout().catch((err) => {
@@ -119,7 +145,7 @@ export const authSlice = createAppSlice({
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register, logout, checkAuth } = authSlice.actions;
+export const { login, register, logout, checkAuth, getMe, updateProfile } = authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {

@@ -7,13 +7,17 @@ import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import { useAppDispatch } from "./app/hooks";
 import { useEffect } from "react";
-import { checkAuth } from "./features/auth/slice/authSlice";
-
+import { checkAuth, getMe } from "./features/auth/slice/authSlice";
+import Profile from "./pages/Profile";
 function App() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(checkAuth());
+    dispatch(checkAuth()).then((result) => {
+      if (checkAuth.fulfilled.match(result)) {
+        dispatch(getMe());
+      }
+    });
   }, [dispatch]);
 
   return (
@@ -26,6 +30,7 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>
     </div>
