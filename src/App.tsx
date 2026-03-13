@@ -5,12 +5,17 @@ import Layout from "./layouts/Layout";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
-import { useAppDispatch } from "./app/hooks";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { useEffect } from "react";
-import { checkAuth, getMe } from "./features/auth/slice/authSlice";
+import {
+  checkAuth,
+  getMe,
+  selectIsAuthLoading,
+} from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
 function App() {
   const dispatch = useAppDispatch();
+  const isAuthLoading = useAppSelector(selectIsAuthLoading);
 
   useEffect(() => {
     dispatch(checkAuth()).then((result) => {
@@ -20,6 +25,13 @@ function App() {
     });
   }, [dispatch]);
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-400 text-sm">Loading...</p>
+      </div>
+    );
+  }
   return (
     <div>
       <nav></nav>

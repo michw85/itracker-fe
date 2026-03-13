@@ -11,6 +11,7 @@ import { isAxiosError } from "axios";
 const initialState: AuthSliceState = {
   isAuthenticated: false,
   user: undefined,
+  isAuthLoading: true,
 };
 
 export const authSlice = createAppSlice({
@@ -70,46 +71,51 @@ export const authSlice = createAppSlice({
           if (isAxiosError(err)) {
             throw new Error(
               err.response?.data?.message || "Internal Server Error",
-            )
+            );
           }
-        })
+        });
       },
       {
+        pending: (state) => {
+          state.isAuthLoading = true;
+        },
         fulfilled: (state) => {
           state.isAuthenticated = true;
+          state.isAuthLoading = false;
           // state.user = action.payload;
         },
         rejected: (state) => {
           state.isAuthenticated = false;
           state.user = undefined;
+          state.isAuthLoading = false;
         },
-      }
+      },
     ),
 
-getMe: create.asyncThunk(
-  async () => {
-    return api.fetchMe();
-  },
-  {
-    fulfilled: (state, action) => {
-      state.user = action.payload;
-    },
-    rejected: (state) => {
-      state.user = undefined;
-    },
-  }
-),
- 
-updateProfile: create.asyncThunk(
-  async (dto: Partial<User>) => {
-    return api.fetchUpdateProfile(dto);
-  },
-  {
-    fulfilled: (state, action) => {
-      state.user = action.payload;
-    },
-  }
-),
+    getMe: create.asyncThunk(
+      async () => {
+        return api.fetchMe();
+      },
+      {
+        fulfilled: (state, action) => {
+          state.user = action.payload;
+        },
+        rejected: (state) => {
+          state.user = undefined;
+        },
+      },
+    ),
+
+    updateProfile: create.asyncThunk(
+      async (dto: Partial<User>) => {
+        return api.fetchUpdateProfile(dto);
+      },
+      {
+        fulfilled: (state, action) => {
+          state.user = action.payload;
+        },
+      },
+    ),
 
     logout: create.asyncThunk(
       async () => {
@@ -138,6 +144,7 @@ updateProfile: create.asyncThunk(
   // state as their first argument.
   selectors: {
     selectIsAuthenticated: (state) => state.isAuthenticated,
+    selectIsAuthLoading: (state) => state.isAuthLoading,
     selectUser: (state) => state.user,
     selectRole: (state) => state.user?.role,
     selectLoginError: (state) => state?.loginErrorMessage,
@@ -145,13 +152,14 @@ updateProfile: create.asyncThunk(
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register, logout, checkAuth, getMe, updateProfile } = authSlice.actions;
+export const { login, register, logout, checkAuth, getMe, updateProfile } =
+  authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
   selectIsAuthenticated,
+  selectIsAuthLoading,
   selectUser,
   selectRole,
   selectLoginError,
 } = authSlice.selectors;
-
