@@ -8,12 +8,24 @@ import Projects from "./pages/Projects";
 import { useAppDispatch } from "./app/hooks";
 import { useEffect } from "react";
 import { checkAuth } from "./features/auth/slice/authSlice";
+import type { AppDispatch, RootState } from "./app/store";
+import { useSelector } from "react-redux";
+
+const AUTH_STORAGE_KEY = "is_authenticated";
 
 function App() {
-  const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch<AppDispatch>();
+
+  const isAuthenticated: boolean = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
 
   useEffect(() => {
-    dispatch(checkAuth());
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
+  }, [dispatch, isAuthenticated]);
+
+  useEffect(() => {
+    !isAuthenticated && dispatch(checkAuth());
   }, [dispatch]);
 
   return (

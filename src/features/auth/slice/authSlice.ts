@@ -7,8 +7,24 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem("is_authenticated");
+    console.log(raw);
+    
+    if (!raw || raw == "false") {
+      console.log("false");
+      return false;
+    }
+    console.log("true");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const initialState: AuthSliceState = {
-  isAuthenticated: false,
+  isAuthenticated: loadFromLocalStorage(),
   user: undefined,
 };
 
@@ -64,19 +80,22 @@ export const authSlice = createAppSlice({
     ),
 
     checkAuth: create.asyncThunk(
-      async () => {
-        return api.fetchAuth().catch((err) => {
+      async (_, { rejectWithValue } ) => {
+        try {
+          return api.fetchAuth();
+        } catch (err) {
           if (isAxiosError(err)) {
-            throw new Error(
+            return rejectWithValue(
               err.response?.data?.message || "Internal Server Error",
-            )
+            );
           }
-        })
+        }
       },
       {
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
+          console.log("AUTH OK", action.payload);
           state.isAuthenticated = true;
-          // state.user = action.payload;
+          state.user = action.payload;
         },
         rejected: (state) => {
           state.isAuthenticated = false;

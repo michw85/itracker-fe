@@ -21,9 +21,7 @@ export const fetchRegister = async (credentials: Credentials) => {
 };
 
 export const fetchAuth = async () => {
-  const res = await axiosInstance.get(AUTH_PATH, {
-    withCredentials: true,
-  });
+  const res = await axiosInstance.get(AUTH_PATH);
   return res.data;
 };
 
