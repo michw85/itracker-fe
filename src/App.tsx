@@ -11,7 +11,6 @@ import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import {
   checkAuth,
-  getMe,
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
@@ -34,10 +33,9 @@ function App() {
   useEffect(() => {
     dispatch(checkAuth()).then((result) => {
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(getMe());
+        dispatch(checkAuth());
       }
     });
-    !isAuthenticated && dispatch(checkAuth());
   }, [dispatch]);
 
   if (isAuthLoading) {

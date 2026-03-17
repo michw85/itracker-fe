@@ -7,16 +7,9 @@ const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
 const AUTH_PATH = "/users/profile/me";
 const LOGOUT_PATH = "/auth/logout";
-
-const ME_PATH = "/users/profile/me";
-
-export const fetchMe = async () => {
-  const res = await axiosInstance.get(ME_PATH, { withCredentials: true });
-  return res.data;
-};
  
 export const fetchUpdateProfile = async (dto: Partial<User>) => {
-  const res = await axiosInstance.patch(ME_PATH, dto, { withCredentials: true });
+  const res = await axiosInstance.patch(AUTH_PATH, dto, { withCredentials: true });
   return res.data;
 };
 export const fetchLogin = async (credentials: Credentials) => {
