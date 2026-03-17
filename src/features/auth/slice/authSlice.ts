@@ -46,21 +46,43 @@ export const authSlice = createAppSlice({
     ),
 
     register: create.asyncThunk(
-      async (dto: UserRegistrationDto) => {
-        return api.fetchRegister(dto);
-        // The value we return becomes the `fulfilled` action payload
+      async (dto: UserRegistrationDto, { rejectWithValue }) => {
+        try {
+          return await api.fetchRegister(dto);
+          // The value we return becomes the `fulfilled` action payload
+        } catch (err) {
+          if (isAxiosError(err)) {
+            return rejectWithValue(
+              err.response?.data || { message: "Internal server error" },
+            );
+          }
+
+          return rejectWithValue({ message: "Internal server error" });
+        }
       },
       {
         pending: (state) => {
           state.isAuthenticated = false;
+          state.loginErrorMessage = undefined;
         },
         fulfilled: (state, action) => {
           state.isAuthenticated = true;
           state.user = action.payload;
+          state.loginErrorMessage = undefined;
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
-          state.loginErrorMessage = action.error.message;
+          state.user = undefined;
+
+          if (
+            action.payload &&
+            typeof action.payload === "object" &&
+            "message" in action.payload
+          ) {
+            state.loginErrorMessage = String(action.payload.message);
+          } else {
+            state.loginErrorMessage = action.error.message;
+          }
         },
       },
     ),
