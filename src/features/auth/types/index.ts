@@ -29,3 +29,17 @@ export interface AuthSliceState {
   loginErrorMessage?: string;
   isAuthLoading?: boolean;
 }
+
+export type BackendFieldError = {
+  field: string;
+  messages: string[];
+};
+
+export type BackendErrorResponse = {
+  timestamp: string;
+  status: number;
+  error: string;
+  message: string;
+  errors?: BackendFieldError[];
+  path: string;
+}
