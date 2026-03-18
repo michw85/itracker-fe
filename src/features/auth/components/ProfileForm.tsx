@@ -9,7 +9,7 @@ const ProfileForm = () => {
   const user = useAppSelector(selectUser);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | undefined>();
+  //const [successMessage, setSuccessMessage] = useState<string | undefined>();
 
   const formik = useFormik({
    
@@ -56,11 +56,11 @@ const ProfileForm = () => {
             : "Your profile information"}
         </p>
 
-        {successMessage && (
+        {/* successMessage && (
           <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200"> 
             {successMessage}
           </div>
-        )}
+        )*/}
 
         {user?.role && (
           <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
