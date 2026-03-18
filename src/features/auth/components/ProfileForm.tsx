@@ -57,7 +57,7 @@ const ProfileForm = () => {
         </p>
 
         {successMessage && (
-          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200">
+          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200"> 
             {successMessage}
           </div>
         )}
