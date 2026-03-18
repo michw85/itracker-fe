@@ -8,8 +8,8 @@ const REGISTER_PATH = "/users/register";
 const AUTH_PATH = "/users/profile/me";
 const LOGOUT_PATH = "/auth/logout";
 export const ME_PATH = "/auth/me";
-const FORGOT_PASSWORD_PATH = "auth/forgot-password";
-const RESET_PASSWORD_PATH = "auth/reset-password";
+const FORGOT_PASSWORD_PATH = "/auth/forgot-password";
+const RESET_PASSWORD_PATH = "/auth/reset-password";
 
 export const fetchMe = async () => {
   const res = await axiosInstance.get(ME_PATH, { withCredentials: true });
