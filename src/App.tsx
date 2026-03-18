@@ -8,6 +8,8 @@ import Projects from "./pages/Projects";
 import { useAppDispatch } from "./app/hooks";
 import { useEffect } from "react";
 import { checkAuth } from "./features/auth/slice/authSlice";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -26,6 +28,8 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Routes>
       </Layout>
     </div>
