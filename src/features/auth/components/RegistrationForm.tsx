@@ -3,10 +3,16 @@ import * as Yup from "yup";
 import { register } from "../slice/authSlice";
 import { useAppDispatch } from "../../../app/hooks";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import type { BackendErrorResponse } from "../types";
 
 const RegistrationForm = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const[serverPasswordErrors, setServerPasswordErrors] = useState<string[]>([]);
+  const[serverFormError, setServerFormError] = useState<string | null>(null);
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -20,13 +26,36 @@ const RegistrationForm = () => {
         .min(8, "Password must be at least 8 characters")
         .required("Password is required"),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setSubmitting }) => {
+      setServerPasswordErrors([]);
+      setServerFormError(null);
       console.log("registration");
       const dispatchResult = await dispatch(register(values));
       if (register.fulfilled.match(dispatchResult)) {
         // if successful, it wiil navigate to login page
         navigate("/login");
+        return;
       }
+
+      if (register.rejected.match(dispatchResult)) {
+        const payload = dispatchResult.payload as BackendErrorResponse | undefined;
+
+        if (payload) {
+          setServerFormError(payload.message || "Registration failed");
+
+          const passwordError = payload.errors?.find(
+            (error) => error.field === "password"
+          );
+
+          if (passwordError?.messages.length) {
+            setServerPasswordErrors(passwordError.messages);
+          }
+        } else {
+          setServerFormError("Registration failed");
+        }
+      }
+
+      setSubmitting(false);
     },
   });
 
@@ -41,6 +70,9 @@ const RegistrationForm = () => {
         </p>
       </div>
       <form onSubmit={formik.handleSubmit} className="space-y-4">
+        {serverFormError && (
+          <p className="text-sm text-red-500">{serverFormError}</p>
+        )}
         {/* Email Field */}
         <div className="space-y-2">
           <label
@@ -76,17 +108,32 @@ const RegistrationForm = () => {
           <input
             id="password"
             type="password"
-            {...formik.getFieldProps("password")}
+            value={formik.values.password}
+            onChange={(e) => {
+              if (serverPasswordErrors.length > 0 || serverFormError) {
+                setServerPasswordErrors([]);
+                setServerFormError(null);
+              }
+              formik.handleChange(e);
+            }}
+            onBlur={formik.handleBlur}
             className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              formik.touched.password && formik.errors.password
+              (formik.touched.password && formik.errors.password) ||
+              serverPasswordErrors.length > 0
                 ? "border-red-500 focus:ring-red-500"
                 : "border-input"
             }`}
             placeholder="••••••••"
           />
-          {formik.touched.password && formik.errors.password && (
+          {formik.touched.password && formik.errors.password ? (
             <p className="text-sm text-red-500">{formik.errors.password}</p>
-          )}
+          ) : serverPasswordErrors.length > 0 ? (
+            <ul className="text-sm text-red-500 space-y-1">
+              {serverPasswordErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
         {/* Submit Button */}

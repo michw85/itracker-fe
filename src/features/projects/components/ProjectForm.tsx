@@ -25,7 +25,7 @@ const ProjectForm = () => {
   });
 
   return (
-    <div className="mx-auto max-w-md space-y-6 p-6 mt-10 rounded-lg border bg-white shadow-sm">
+    <div className="mx-auto max-w-sm space-y-6 p-6 rounded-lg border bg-white shadow-sm mt-10">
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">New Project</h1>
         <p className="text-sm text-gray-500">
