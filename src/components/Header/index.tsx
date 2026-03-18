@@ -47,7 +47,7 @@ export default function Header() {
           {isAuthenticated ? (
             <>
               <Link
-                to="#"
+                to="/profile"
                 className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
               >
                 Profile

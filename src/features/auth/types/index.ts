@@ -13,13 +13,33 @@ export type ROLE = "ROLE_USER" | "ROLE_ADMIN";
 
 export interface User {
   id: number;
-  email: "string";
+  email: string;
   role: ROLE;
-  confirmationResent: boolean;
+  confirmation: boolean;
+  displayName?: string;
+  bio?: string;
+  position?: string;
+  department?: string;
+  avatarUrl?: string;
 }
 
 export interface AuthSliceState {
   isAuthenticated: boolean;
   user?: User;
   loginErrorMessage?: string;
+  isAuthLoading?: boolean;
+}
+
+export type BackendFieldError = {
+  field: string;
+  messages: string[];
+};
+
+export type BackendErrorResponse = {
+  timestamp: string;
+  status: number;
+  error: string;
+  message: string;
+  errors?: BackendFieldError[];
+  path: string;
 }
