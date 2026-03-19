@@ -1,9 +1,8 @@
 import axios, {
-  // AxiosError,
+  AxiosError,
   type AxiosInstance,
   type InternalAxiosRequestConfig,
-  // type AxiosRequestConfig,
-  // type AxiosResponse,
+  type AxiosRequestConfig,
 } from "axios";
 
 const axiosInstance: AxiosInstance = axios.create({
@@ -31,8 +30,10 @@ axiosInstance.interceptors.request.use(
 // Interceptor for error handling and token refresh
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // If 401 error and not a token refresh request
     if (
@@ -56,7 +57,12 @@ axiosInstance.interceptors.response.use(
         localStorage.setItem("refreshToken", newRefreshToken);
 
         // Repeat original request with new token
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        } else {
+          originalRequest.headers = { Authorization: `Bearer ${accessToken}` };
+        }
+        
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         // If token refresh fails, logout user
@@ -70,74 +76,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-// interface FailedRequest {
-//   resolve: (value?: unknown) => void;
-//   reject: (error: unknown) => void;
-// }
-
-// let isRefreshing = false;
-// let requestQueue: FailedRequest[] = [];
-
-// const processQueue = (error: unknown, response?: AxiosResponse | null) => {
-//   requestQueue.forEach((prom) => {
-//     if (error) {
-//       prom.reject(error);
-//     } else {
-//       prom.resolve(response);
-//     }
-//   });
-//   requestQueue = [];
-// };
-
-// axiosInstance.interceptors.response.use(
-//   (response: AxiosResponse) => response,
-//   async (error: AxiosError) => {
-//     const originalRequest = error.config as AxiosRequestConfig & {
-//       _retry?: boolean;
-//     };
-
-//     if (
-//       error.response?.status === 401 &&
-//       !originalRequest._retry &&
-//       !originalRequest.url?.includes("/api/v1/auth/refresh-token")
-//     ) {
-//       originalRequest._retry = true;
-
-//       if (!isRefreshing) {
-//         isRefreshing = true;
-
-//         try {
-//           const res = await axios.post(
-//             "/api/v1/auth/refresh-token",
-//             {},
-//             {
-//               withCredentials: true,
-//             }
-//           );
-
-//           isRefreshing = false;
-//           processQueue(null, res);
-
-//           return axiosInstance(originalRequest);
-//         } catch (refreshError) {
-//           isRefreshing = false;
-//           processQueue(refreshError);
-//           window.location.href = "/login";
-//           return Promise.reject(refreshError);
-//         }
-//       }
-
-//       return new Promise((resolve, reject) => {
-//         requestQueue.push({
-//           resolve: () => resolve(axiosInstance(originalRequest)),
-//           reject: (err: unknown) => reject(err),
-//         });
-//       });
-//     }// Е
-
-//     return Promise.reject(error);
-//   }
-// );
 
 export default axiosInstance;
