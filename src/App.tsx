@@ -25,6 +25,7 @@ function App() {
   const isAuthenticated: boolean = useSelector(
     (state: RootState) => state.auth.isAuthenticated,
   );
+  const user = useAppSelector((state) => state.auth.user);
 
   // Sync authentication state with localStorage
   useEffect(() => {
@@ -34,15 +35,27 @@ function App() {
   // Check authentication on app load
   useEffect(() => {
     const initAuth = async () => {
+      console.log("🔵 Initializing auth...");
+      console.log("🔵 Token exists:", !!localStorage.getItem("accessToken"));
+      
       const result = await dispatch(checkAuth());
+      console.log("🟢 checkAuth result:", result);
+      
       if (checkAuth.fulfilled.match(result)) {
-        // If authentication is successful, load user data
-        await dispatch(getMe());
+        console.log("🟢 checkAuth fulfilled, loading user data...");
+        const meResult = await dispatch(getMe());
+        console.log("🟢 getMe result:", meResult);
+      } else {
+        console.log("🔴 checkAuth rejected");
       }
     };
     
     initAuth();
   }, [dispatch]);
+
+  console.log("🟡 App render - isAuthLoading:", isAuthLoading);
+  console.log("🟡 App render - isAuthenticated:", isAuthenticated);
+  console.log("🟡 App render - user:", user);
 
   if (isAuthLoading) {
     return (
