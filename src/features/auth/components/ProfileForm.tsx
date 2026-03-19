@@ -12,7 +12,6 @@ import {
 const ProfileForm = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
-
   const [isEditing, setIsEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | undefined>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,9 +28,6 @@ const ProfileForm = () => {
     },
     validationSchema: Yup.object({
       displayName: Yup.string().required("Display name is required"),
-      email: Yup.string()
-        .email("Invalid email address")
-        .required("Email is required"),
       email: Yup.string()
         .email("Invalid email address")
         .required("Email is required"),
@@ -56,15 +52,12 @@ const ProfileForm = () => {
       }
 
       if (updateProfile.fulfilled.match(result)) {
-        resetForm(); 
+        setIsEditing(false);
+        setSuccessMessage("Profile updated successfully!");
+        setTimeout(() => setSuccessMessage(undefined), 3000);
       }
     },
   });
-
-  const isSaveDisabled =
-    !formik.dirty ||
-    Object.keys(formik.errors).length > 0 ||
-    formik.isSubmitting;
 
   return (
     <div className="mx-auto max-w-sm space-y-6 p-6 rounded-lg border bg-white shadow-sm mt-10">
@@ -75,12 +68,11 @@ const ProfileForm = () => {
             ? "Edit your profile information"
             : "Your profile information"}
         </p>
-
-        {/* successMessage && (
-          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200"> 
+        {successMessage && (
+          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200">
             {successMessage}
           </div>
-        )*/}
+        )}
 
         {/* Role & Confirmation Status */}
         <div className="flex justify-center gap-2 flex-wrap pt-1">
@@ -98,7 +90,7 @@ const ProfileForm = () => {
           <img
             src={user.avatarUrl}
             alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover border"
+            className="w-30 h-30 rounded-full object-cover border"
           />
         </div>
       )}
@@ -270,7 +262,6 @@ const ProfileForm = () => {
               >
                 {formik.isSubmitting ? "Saving..." : "Save"}
               </button>
-
               <button
                 type="button"
                 onClick={() => {
@@ -301,4 +292,3 @@ const ProfileForm = () => {
 };
 
 export default ProfileForm;
-
