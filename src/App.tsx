@@ -13,6 +13,7 @@ import {
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
+import UIKit from "./pages/UIKit";
 function App() {
   const dispatch = useAppDispatch();
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
@@ -39,6 +40,7 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/ui-kit" element={<UIKit />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
