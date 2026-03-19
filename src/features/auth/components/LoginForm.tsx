@@ -3,6 +3,7 @@ import * as Yup from "yup";
 import { login, selectLoginError } from "../slice/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { useNavigate } from "react-router-dom";
+import Input from "../../../components/ui/Input/Input";
 
 const LoginForm = () => {
   const dispatch = useAppDispatch();
@@ -46,6 +47,14 @@ const LoginForm = () => {
       </div>
       <form onSubmit={formik.handleSubmit} className="space-y-4">
         {/* Email Field */}
+        <Input
+          name="email"
+          id="email_id"
+          label="Email"
+          className="w-full"
+          error="Server error!"
+          value="12345678"
+        />
         <div className="space-y-2">
           <label
             htmlFor="email"

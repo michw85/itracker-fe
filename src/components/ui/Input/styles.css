@@ -1,3 +1,7 @@
 .input-control {
   position: relative;
 }
+label.required::after {
+  content: " *";
+  color: red;
+}

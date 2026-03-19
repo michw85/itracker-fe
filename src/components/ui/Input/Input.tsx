@@ -30,8 +30,8 @@ const Input: React.FC<InputProps> = ({
     <div className="space-y-2">
       {label && (
         <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          htmlFor={id}
+          className={`block text-sm font-medium text-gray-700 ${required && "required"}`}
         >
           {label}
         </label>
