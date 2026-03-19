@@ -7,7 +7,7 @@ import {
   selectInviteSuccessMessage,
   clearInviteMessages,
 } from "../slice/projectsSlice";
-import type { ProjectRole } from "../types/index";
+import type { ProjectRole } from "../types";
 import { useEffect } from "react";
 
 interface InviteUserFormProps {
@@ -32,13 +32,17 @@ const InviteUserForm = ({ projectId }: InviteUserFormProps) => {
         .oneOf(["ADMIN", "MEMBER", "VIEWER"], "Select a role")
         .required("Role is required"),
     }),
-    onSubmit: (values, { resetForm }) => {
-      dispatch(inviteUser({ projectId, dto: values }));
-      resetForm();
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        await dispatch(inviteUser({ projectId, dto: values })).unwrap();
+        resetForm();
+      } catch (error) {
+        console.error("Error inviting user:", error);
+      }
     },
   });
 
-  // Clear messages on unmount / Очищаем сообщения при размонтировании
+  // Clear messages on unmount
   useEffect(() => {
     return () => {
       dispatch(clearInviteMessages());
@@ -48,13 +52,13 @@ const InviteUserForm = ({ projectId }: InviteUserFormProps) => {
   return (
     <div className="bg-white rounded-lg border p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4">Invite Member</h3>
-      
+
       {successMessage && (
         <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200">
           {successMessage}
         </div>
       )}
-      
+
       {errorMessage && (
         <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
           {errorMessage}
@@ -104,8 +108,12 @@ const InviteUserForm = ({ projectId }: InviteUserFormProps) => {
             <option value="VIEWER">Viewer</option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            <span className="font-medium">Administrator:</span> can manage members <br />
-            <span className="font-medium">Member:</span> can create and edit tasks<br />
+            <span className="font-medium">Administrator:</span> can manage
+            members
+            <br />
+            <span className="font-medium">Member:</span> can create and edit
+            tasks
+            <br />
             <span className="font-medium">Viewer:</span> view only
           </p>
         </div>

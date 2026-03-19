@@ -6,7 +6,11 @@ import {
   selectCreateProjectErrorMessage,
 } from "../slice/projectsSlice";
 
-const ProjectForm = () => {
+interface ProjectFormProps {
+  onSuccess?: () => void;
+}
+
+const ProjectForm: React.FC<ProjectFormProps> = ({ onSuccess }) => {
   const dispatch = useAppDispatch();
   const projectError = useAppSelector(selectCreateProjectErrorMessage);
 
@@ -19,8 +23,18 @@ const ProjectForm = () => {
       title: Yup.string().required("Title is required"),
       description: Yup.string().required("Description is required"),
     }),
-    onSubmit: (values) => {
-      dispatch(createProject(values));
+    onSubmit: async (values) => {
+      console.log("🔵 Submitting project:", values);
+      try {
+        const result = await dispatch(createProject(values)).unwrap();
+        console.log("🟢 Project created:", result);
+        if (onSuccess) {
+          onSuccess();
+        }
+        formik.resetForm();
+      } catch (error) {
+        console.error("🔴 Error creating project:", error);
+      }
     },
   });
 

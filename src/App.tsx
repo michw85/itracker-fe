@@ -5,6 +5,7 @@ import Layout from "./layouts/Layout";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
+import AcceptInvite from "./pages/AcceptInvite";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { useEffect } from "react";
 import {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
         </Routes>
       </Layout>
     </div>
