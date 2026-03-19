@@ -9,8 +9,24 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem("is_authenticated");
+    console.log(raw);
+    
+    if (!raw || raw == "false") {
+      console.log("false");
+      return false;
+    }
+    console.log("true");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const initialState: AuthSliceState = {
-  isAuthenticated: false,
+  isAuthenticated: loadFromLocalStorage(),
   user: undefined,
   isAuthLoading: true,
 };
@@ -110,8 +126,9 @@ export const authSlice = createAppSlice({
         pending: (state) => {
           state.isAuthLoading = true;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
+          state.user = action.payload;
           state.isAuthLoading = false;
         },
         rejected: (state) => {
