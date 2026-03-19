@@ -9,14 +9,14 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
-// Функция для проверки наличия токена
+// Function for checking the presence of a token
 function checkToken() {
   const token = localStorage.getItem("accessToken");
-  return !!token; // возвращает true если токен есть
+  return !!token; // returns true if the token exists
 }
 
 const initialState: AuthSliceState = {
-  isAuthenticated: checkToken(), // проверяем наличие токена
+  isAuthenticated: checkToken(), // Checking for the presence of a token
   user: undefined,
   isAuthLoading: true,
 };
@@ -37,7 +37,7 @@ export const authSlice = createAppSlice({
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken);
         }
-        // Сохраняем флаг аутентификации
+        // Save the authentication flag
         localStorage.setItem("is_authenticated", "true");
 
         return response;
@@ -113,7 +113,7 @@ export const authSlice = createAppSlice({
     if (!token) {
       throw new Error("No token found");
     }
-    // Просто проверяем что токен валидный
+    // We just check that the token is valid.
     await api.fetchAuth();
     return { success: true };
   },
