@@ -8,36 +8,20 @@ import Projects from "./pages/Projects";
 import AcceptInvite from "./pages/AcceptInvite";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { useEffect } from "react";
-import type { AppDispatch, RootState } from "./app/store";
-import { useSelector } from "react-redux";
-import {
-  checkAuth,
-  selectIsAuthLoading,
-} from "./features/auth/slice/authSlice";
+import { checkAuth, getMe, selectIsAuthLoading } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
 
-const AUTH_STORAGE_KEY = "is_authenticated";
-
 function App() {
-  const dispatch = useAppDispatch<AppDispatch>();
-
+  const dispatch = useAppDispatch();
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
-
-  const isAuthenticated: boolean = useSelector(
-    (state: RootState) => state.auth.isAuthenticated,
-  );
-
-  useEffect(() => {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
-  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     dispatch(checkAuth()).then((result) => {
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(checkAuth());
+        dispatch(getMe()); // ← mūsu fix
       }
     });
-  }, [dispatch]);
+  }, []);
 
   if (isAuthLoading) {
     return (
@@ -46,6 +30,7 @@ function App() {
       </div>
     );
   }
+
   return (
     <div>
       <nav></nav>
