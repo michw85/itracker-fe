@@ -1,5 +1,5 @@
 import axios, {
-  // AxiosError,
+  AxiosError,
   type AxiosInstance,
   type InternalAxiosRequestConfig,
   // type AxiosRequestConfig,
@@ -76,57 +76,53 @@ axiosInstance.interceptors.response.use(
 //   reject: (error: unknown) => void;
 // }
 
-// let isRefreshing = false;
-// let requestQueue: FailedRequest[] = [];
+let isRefreshing = false;
+let requestQueue: FailedRequest[] = [];
 
-// const processQueue = (error: unknown, response?: AxiosResponse | null) => {
-//   requestQueue.forEach((prom) => {
-//     if (error) {
-//       prom.reject(error);
-//     } else {
-//       prom.resolve(response);
-//     }
-//   });
-//   requestQueue = [];
-// };
+const processQueue = (error?: unknown) => {
+  requestQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  requestQueue = [];
+};
 
-// axiosInstance.interceptors.response.use(
-//   (response: AxiosResponse) => response,
-//   async (error: AxiosError) => {
-//     const originalRequest = error.config as AxiosRequestConfig & {
-//       _retry?: boolean;
-//     };
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-//     if (
-//       error.response?.status === 401 &&
-//       !originalRequest._retry &&
-//       !originalRequest.url?.includes("/api/v1/auth/refresh-token")
-//     ) {
-//       originalRequest._retry = true;
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/auth/refresh-token")
+    ) {
+      originalRequest._retry = true;
 
-//       if (!isRefreshing) {
-//         isRefreshing = true;
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          requestQueue.push({
+            resolve: () => resolve(axiosInstance(originalRequest)),
+            reject,
+          });
+        });
+      }
 
-//         try {
-//           const res = await axios.post(
-//             "/api/v1/auth/refresh-token",
-//             {},
-//             {
-//               withCredentials: true,
-//             }
-//           );
+      isRefreshing = true;
 
-//           isRefreshing = false;
-//           processQueue(null, res);
+      try {
+        await axios.post(
+          "/api/v1/auth/refresh-token",
+          {},
+          { withCredentials: true },
+        );
 
-//           return axiosInstance(originalRequest);
-//         } catch (refreshError) {
-//           isRefreshing = false;
-//           processQueue(refreshError);
-//           window.location.href = "/login";
-//           return Promise.reject(refreshError);
-//         }
-//       }
+        processQueue(null);
 
 //       return new Promise((resolve, reject) => {
 //         requestQueue.push({
@@ -136,8 +132,10 @@ axiosInstance.interceptors.response.use(
 //       });
 //     }// Е
 
-//     return Promise.reject(error);
-//   }
-// );
+    if (originalRequest._retry) {
+      return Promise.reject(error);
+    }
+  },
+);
 
 export default axiosInstance;
