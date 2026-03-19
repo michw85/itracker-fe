@@ -138,6 +138,27 @@ export const authSlice = createAppSlice({
         },
       },
     ),
+updateAvatarUrl: create.asyncThunk(
+  async (avatarUrl: string) => {
+    return api.fetchUpdateAvatarUrl(avatarUrl);
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+  }
+),
+
+uploadAvatarFile: create.asyncThunk(
+  async (file: File) => {
+    return api.fetchUploadAvatarFile(file);
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+  }
+),
 
     logout: create.asyncThunk(
       async () => {
@@ -174,7 +195,7 @@ export const authSlice = createAppSlice({
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register, logout, checkAuth, getMe, updateProfile } =
+export const { login, register, logout, checkAuth, getMe, updateProfile, updateAvatarUrl, uploadAvatarFile } =
   authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.

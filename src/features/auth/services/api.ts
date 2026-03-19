@@ -16,7 +16,7 @@ export const fetchMe = async () => {
 };
  
 export const fetchUpdateProfile = async (dto: Partial<User>) => {
-  const res = await axiosInstance.patch(ME_PATH, dto, { withCredentials: true });
+  const res = await axiosInstance.put(ME_PATH, dto, { withCredentials: true });
   return res.data;
 };
 export const fetchLogin = async (credentials: Credentials) => {
@@ -39,5 +39,24 @@ export const fetchAuth = async () => {
 
 export const fetchLogout = async () => {
   const res = await axiosInstance.post(LOGOUT_PATH);
+  return res.data;
+};
+
+// POST /me/avatar/url
+export const fetchUpdateAvatarUrl = async (avatarUrl: string) => {
+  const res = await axiosInstance.post("/users/profile/me/avatar/url",
+    { avatarUrl }, { withCredentials: true });
+  return res.data;
+};
+
+// POST /me/avatar   File
+export const fetchUploadAvatarFile = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await axiosInstance.post("/users/profile/me/avatar",
+    formData, { 
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" }
+    });
   return res.data;
 };
