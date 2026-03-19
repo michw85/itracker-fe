@@ -7,20 +7,33 @@ import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { useEffect } from "react";
+import type { AppDispatch, RootState } from "./app/store";
+import { useSelector } from "react-redux";
 import {
   checkAuth,
-  getMe,
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
+
+const AUTH_STORAGE_KEY = "is_authenticated";
+
 function App() {
-  const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch<AppDispatch>();
+
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
+
+  const isAuthenticated: boolean = useSelector(
+    (state: RootState) => state.auth.isAuthenticated,
+  );
+
+  useEffect(() => {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
+  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     dispatch(checkAuth()).then((result) => {
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(getMe());
+        dispatch(checkAuth());
       }
     });
   }, [dispatch]);

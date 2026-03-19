@@ -8,8 +8,24 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem("is_authenticated");
+    console.log(raw);
+    
+    if (!raw || raw == "false") {
+      console.log("false");
+      return false;
+    }
+    console.log("true");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const initialState: AuthSliceState = {
-  isAuthenticated: false,
+  isAuthenticated: loadFromLocalStorage(),
   user: undefined,
   isAuthLoading: true,
 };
@@ -88,42 +104,30 @@ export const authSlice = createAppSlice({
     ),
 
     checkAuth: create.asyncThunk(
-      async () => {
-        return api.fetchAuth().catch((err) => {
+      async (_, { rejectWithValue } ) => {
+        try {
+          return api.fetchAuth();
+        } catch (err) {
           if (isAxiosError(err)) {
-            throw new Error(
+            return rejectWithValue(
               err.response?.data?.message || "Internal Server Error",
             );
           }
-        });
+        }
       },
       {
         pending: (state) => {
           state.isAuthLoading = true;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
+          state.user = action.payload;
           state.isAuthLoading = false;
-          // state.user = action.payload;
         },
         rejected: (state) => {
           state.isAuthenticated = false;
           state.user = undefined;
           state.isAuthLoading = false;
-        },
-      },
-    ),
-
-    getMe: create.asyncThunk(
-      async () => {
-        return api.fetchMe();
-      },
-      {
-        fulfilled: (state, action) => {
-          state.user = action.payload;
-        },
-        rejected: (state) => {
-          state.user = undefined;
         },
       },
     ),
@@ -174,7 +178,7 @@ export const authSlice = createAppSlice({
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register, logout, checkAuth, getMe, updateProfile } =
+export const { login, register, logout, checkAuth, updateProfile } =
   authSlice.actions;
 
 // Selectors returned by `slice.selectors` take the root state as their first argument.
