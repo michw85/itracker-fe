@@ -1,22 +1,26 @@
 import axiosInstance from "../../../lib/axiosInstance";
 import type { Credentials, User } from "../types";
 
-// we already added  prefix /api in axios config
-
 const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
 const AUTH_PATH = "/users/profile/me";
 const LOGOUT_PATH = "/auth/logout";
- 
-export const fetchUpdateProfile = async (dto: Partial<User>) => {
-  const res = await axiosInstance.patch(AUTH_PATH, dto, { withCredentials: true });
+const ME_PATH = "/users/profile/me";
+
+export const fetchMe = async () => {
+  const res = await axiosInstance.get(ME_PATH);
   return res.data;
 };
+
+export const fetchUpdateProfile = async (dto: Partial<User>) => {
+  const res = await axiosInstance.patch(ME_PATH, dto);
+  return res.data;
+};
+
 export const fetchLogin = async (credentials: Credentials) => {
   const res = await axiosInstance.post(LOGIN_PATH, credentials);
   return res.data;
 };
-
 
 export const fetchRegister = async (credentials: Credentials) => {
   const res = await axiosInstance.post(REGISTER_PATH, credentials);
