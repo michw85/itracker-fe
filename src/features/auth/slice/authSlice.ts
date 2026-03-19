@@ -9,24 +9,14 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem("is_authenticated");
-    console.log(raw);
-    
-    if (!raw || raw == "false") {
-      console.log("false");
-      return false;
-    }
-    console.log("true");
-    return true;
-  } catch {
-    return false;
-  }
+// Функция для проверки наличия токена
+function checkToken() {
+  const token = localStorage.getItem("accessToken");
+  return !!token; // возвращает true если токен есть
 }
 
 const initialState: AuthSliceState = {
-  isAuthenticated: loadFromLocalStorage(),
+  isAuthenticated: checkToken(), // проверяем наличие токена
   user: undefined,
   isAuthLoading: true,
 };
@@ -47,6 +37,8 @@ export const authSlice = createAppSlice({
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken);
         }
+        // Сохраняем флаг аутентификации
+        localStorage.setItem("is_authenticated", "true");
 
         return response;
       },
@@ -68,6 +60,7 @@ export const authSlice = createAppSlice({
           // Remove tokens on error
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
         },
       },
     ),
@@ -130,6 +123,7 @@ export const authSlice = createAppSlice({
           state.isAuthenticated = true;
           state.user = action.payload;
           state.isAuthLoading = false;
+          localStorage.setItem("is_authenticated", "true");
         },
         rejected: (state) => {
           state.isAuthenticated = false;
@@ -137,6 +131,7 @@ export const authSlice = createAppSlice({
           state.isAuthLoading = false;
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
         },
       },
     ),
@@ -185,6 +180,7 @@ export const authSlice = createAppSlice({
           // Always remove tokens on logout
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
         }
       },
       {

@@ -12,6 +12,7 @@ import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import {
   checkAuth,
+  getMe,
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
@@ -20,23 +21,27 @@ const AUTH_STORAGE_KEY = "is_authenticated";
 
 function App() {
   const dispatch = useAppDispatch<AppDispatch>();
-
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
-
   const isAuthenticated: boolean = useSelector(
     (state: RootState) => state.auth.isAuthenticated,
   );
 
+  // Sync authentication state with localStorage
   useEffect(() => {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
-  }, [dispatch, isAuthenticated]);
+  }, [isAuthenticated]);
 
+  // Check authentication on app load
   useEffect(() => {
-    dispatch(checkAuth()).then((result) => {
+    const initAuth = async () => {
+      const result = await dispatch(checkAuth());
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(checkAuth());
+        // If authentication is successful, load user data
+        await dispatch(getMe());
       }
-    });
+    };
+    
+    initAuth();
   }, [dispatch]);
 
   if (isAuthLoading) {
@@ -46,6 +51,7 @@ function App() {
       </div>
     );
   }
+  
   return (
     <div>
       <nav></nav>
