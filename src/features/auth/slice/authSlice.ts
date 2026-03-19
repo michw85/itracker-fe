@@ -4,12 +4,29 @@ import type {
   Credentials,
   UserRegistrationDto,
   User,
+  AuthResponse,
 } from "../types";
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem("is_authenticated");
+    console.log(raw);
+    
+    if (!raw || raw == "false") {
+      console.log("false");
+      return false;
+    }
+    console.log("true");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const initialState: AuthSliceState = {
-  isAuthenticated: false,
+  isAuthenticated: loadFromLocalStorage(),
   user: undefined,
   isAuthLoading: true,
 };
@@ -18,45 +35,54 @@ export const authSlice = createAppSlice({
   name: "auth",
   initialState,
   reducers: (create) => ({
+    // Login with JWT
     login: create.asyncThunk(
       async (credentials: Credentials) => {
-        return api.fetchLogin(credentials).catch((err) => {
-          if (isAxiosError(err)) {
-            throw new Error(
-              err.response?.data?.message || "Internal Server Error",
-            );
-          }
-        });
+        const response = (await api.fetchLogin(credentials)) as AuthResponse;
+
+        // Save tokens on successful login
+        if (response.accessToken) {
+          localStorage.setItem("accessToken", response.accessToken);
+        }
+        if (response.refreshToken) {
+          localStorage.setItem("refreshToken", response.refreshToken);
+        }
+
+        return response;
       },
       {
         pending: (state) => {
           state.isAuthenticated = false;
+          state.loginErrorMessage = undefined;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
+          state.user = action.payload.user;
           state.loginErrorMessage = undefined;
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
           state.user = undefined;
-          console.log(action.error);
-          state.loginErrorMessage = action.error.message;
+          state.loginErrorMessage = action.error.message || "Login failed";
+
+          // Remove tokens on error
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
         },
       },
     ),
 
+    // Register
     register: create.asyncThunk(
       async (dto: UserRegistrationDto, { rejectWithValue }) => {
         try {
           return await api.fetchRegister(dto);
-          // The value we return becomes the `fulfilled` action payload
         } catch (err) {
           if (isAxiosError(err)) {
             return rejectWithValue(
               err.response?.data || { message: "Internal server error" },
             );
           }
-
           return rejectWithValue({ message: "Internal server error" });
         }
       },
@@ -87,47 +113,55 @@ export const authSlice = createAppSlice({
       },
     ),
 
+    // Check authentication status
     checkAuth: create.asyncThunk(
       async () => {
-        return api.fetchAuth().catch((err) => {
-          if (isAxiosError(err)) {
-            throw new Error(
-              err.response?.data?.message || "Internal Server Error",
-            );
-          }
-        });
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          throw new Error("No token found");
+        }
+        return api.fetchAuth();
       },
       {
         pending: (state) => {
           state.isAuthLoading = true;
         },
-        fulfilled: (state) => {
+        fulfilled: (state, action) => {
           state.isAuthenticated = true;
+          state.user = action.payload;
           state.isAuthLoading = false;
-          // state.user = action.payload;
         },
         rejected: (state) => {
           state.isAuthenticated = false;
           state.user = undefined;
           state.isAuthLoading = false;
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
         },
       },
     ),
 
+    // Get current user data
     getMe: create.asyncThunk(
       async () => {
-        return api.fetchMe();
+        console.log("🔵 Fetching user data...");
+        const data = await api.fetchMe();
+        console.log("🟢 User data:", data);
+        return data;
       },
       {
         fulfilled: (state, action) => {
           state.user = action.payload;
+          console.log("✅ User loaded:", action.payload);
         },
-        rejected: (state) => {
+        rejected: (state, action) => {
           state.user = undefined;
+          console.error("❌ Failed to load user:", action.error);
         },
       },
     ),
 
+    // Update user profile
     updateProfile: create.asyncThunk(
       async (dto: Partial<User>) => {
         return api.fetchUpdateProfile(dto);
@@ -135,6 +169,9 @@ export const authSlice = createAppSlice({
       {
         fulfilled: (state, action) => {
           state.user = action.payload;
+        },
+        rejected: (_, action) => {
+          console.error("❌ Failed to update profile:", action.error);
         },
       },
     ),
@@ -160,15 +197,16 @@ uploadAvatarFile: create.asyncThunk(
   }
 ),
 
+    // Logout
     logout: create.asyncThunk(
       async () => {
-        return api.fetchLogout().catch((err) => {
-          if (isAxiosError(err)) {
-            throw new Error(
-              err.response?.data?.message || "Internal Server Error",
-            );
-          }
-        });
+        try {
+          await api.fetchLogout();
+        } finally {
+          // Always remove tokens on logout
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
       },
       {
         fulfilled: (state) => {
@@ -176,15 +214,9 @@ uploadAvatarFile: create.asyncThunk(
           state.user = undefined;
           state.loginErrorMessage = undefined;
         },
-        rejected: (state) => {
-          state.isAuthenticated = false;
-          state.user = undefined;
-        },
       },
     ),
   }),
-  // You can define your selectors here. These selectors receive the slice
-  // state as their first argument.
   selectors: {
     selectIsAuthenticated: (state) => state.isAuthenticated,
     selectIsAuthLoading: (state) => state.isAuthLoading,
@@ -198,7 +230,6 @@ uploadAvatarFile: create.asyncThunk(
 export const { login, register, logout, checkAuth, getMe, updateProfile, updateAvatarUrl, uploadAvatarFile } =
   authSlice.actions;
 
-// Selectors returned by `slice.selectors` take the root state as their first argument.
 export const {
   selectIsAuthenticated,
   selectIsAuthLoading,

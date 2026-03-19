@@ -4,6 +4,15 @@ export interface Credentials {
   password: string;
 }
 
+export interface ProjectSummary {
+  id: string;
+  title: string;
+  description: string;
+  activeTasksCount: number;
+  executorsCount: number;
+  status: "OPEN" | "CLOSED" | "ARCHIVED";
+}
+
 export interface UserRegistrationDto {
   email: string;
   password: string;
@@ -42,4 +51,10 @@ export type BackendErrorResponse = {
   message: string;
   errors?: BackendFieldError[];
   path: string;
+};
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
 }

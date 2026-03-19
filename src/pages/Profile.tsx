@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { getMe } from "../features/auth/slice/authSlice";
 import { selectIsAuthenticated } from "../features/auth/slice/authSlice";
 import ProfileForm from "../features/auth/components/ProfileForm";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,6 @@ const Profile = () => {
       navigate("/login");
       return;
     }
-    dispatch(getMe());
   }, [dispatch, isAuthenticated, navigate]);
 
   return <ProfileForm />;
