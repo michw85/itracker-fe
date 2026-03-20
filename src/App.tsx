@@ -12,6 +12,7 @@ import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import {
   checkAuth,
+  getMe,
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
@@ -20,24 +21,41 @@ const AUTH_STORAGE_KEY = "is_authenticated";
 
 function App() {
   const dispatch = useAppDispatch<AppDispatch>();
-
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
-
   const isAuthenticated: boolean = useSelector(
     (state: RootState) => state.auth.isAuthenticated,
   );
+  const user = useAppSelector((state) => state.auth.user);
 
+  // Sync authentication state with localStorage
   useEffect(() => {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(isAuthenticated));
-  }, [dispatch, isAuthenticated]);
+  }, [isAuthenticated]);
 
+  // Check authentication on app load
   useEffect(() => {
-    dispatch(checkAuth()).then((result) => {
+    const initAuth = async () => {
+      console.log("🔵 Initializing auth...");
+      console.log("🔵 Token exists:", !!localStorage.getItem("accessToken"));
+      
+      const result = await dispatch(checkAuth());
+      console.log("🟢 checkAuth result:", result);
+      
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(checkAuth());
+        console.log("🟢 checkAuth fulfilled, loading user data...");
+        const meResult = await dispatch(getMe());
+        console.log("🟢 getMe result:", meResult);
+      } else {
+        console.log("🔴 checkAuth rejected");
       }
-    });
+    };
+    
+    initAuth();
   }, [dispatch]);
+
+  console.log("🟡 App render - isAuthLoading:", isAuthLoading);
+  console.log("🟡 App render - isAuthenticated:", isAuthenticated);
+  console.log("🟡 App render - user:", user);
 
   if (isAuthLoading) {
     return (
@@ -46,6 +64,7 @@ function App() {
       </div>
     );
   }
+  
   return (
     <div>
       <nav></nav>
