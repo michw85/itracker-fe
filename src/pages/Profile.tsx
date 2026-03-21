@@ -14,7 +14,7 @@ const Profile = () => {
       navigate("/login");
       return;
     }
-    dispatch(getMe()); // ← atjaunots
+    dispatch(getMe());
   }, []);
 
   return <ProfileForm />;

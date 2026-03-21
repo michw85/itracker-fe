@@ -18,10 +18,10 @@ function App() {
   useEffect(() => {
     dispatch(checkAuth()).then((result) => {
       if (checkAuth.fulfilled.match(result)) {
-        dispatch(getMe()); // ← mūsu fix
+        dispatch(getMe());
       }
     });
-  }, []);
+  }, [dispatch]);
 
   if (isAuthLoading) {
     return (
