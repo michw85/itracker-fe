@@ -1,11 +1,8 @@
-import ProjectsList from "../features/projects/components/ProjectsList";
-import ProjectForm from "../features/projects/components/ProjectForm";
+import React from "react";
+import ProjectsDashboard from "../features/projects/components/ProjectsDashboard";
 
-export default function Projects() {
-  return (
-    <div>
-      <ProjectForm />
-      <ProjectsList />
-    </div>
-  );
-}
+const ProjectsPage: React.FC = () => {
+  return <ProjectsDashboard />;
+};
+
+export default ProjectsPage;
