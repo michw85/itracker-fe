@@ -9,24 +9,14 @@ import type {
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
 
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem("is_authenticated");
-    console.log(raw);
-    
-    if (!raw || raw == "false") {
-      console.log("false");
-      return false;
-    }
-    console.log("true");
-    return true;
-  } catch {
-    return false;
-  }
+// Function for checking the presence of a token
+function checkToken() {
+  const token = localStorage.getItem("accessToken");
+  return !!token; // returns true if the token exists
 }
 
 const initialState: AuthSliceState = {
-  isAuthenticated: loadFromLocalStorage(),
+  isAuthenticated: checkToken(), // Checking for the presence of a token
   user: undefined,
   isAuthLoading: true,
 };
@@ -47,6 +37,8 @@ export const authSlice = createAppSlice({
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken);
         }
+        // Save the authentication flag
+        localStorage.setItem("is_authenticated", "true");
 
         return response;
       },
@@ -68,6 +60,7 @@ export const authSlice = createAppSlice({
           // Remove tokens on error
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
         },
       },
     ),
@@ -115,31 +108,34 @@ export const authSlice = createAppSlice({
 
     // Check authentication status
     checkAuth: create.asyncThunk(
-      async () => {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          throw new Error("No token found");
-        }
-        return api.fetchAuth();
-      },
-      {
-        pending: (state) => {
-          state.isAuthLoading = true;
-        },
-        fulfilled: (state, action) => {
-          state.isAuthenticated = true;
-          state.user = action.payload;
-          state.isAuthLoading = false;
-        },
-        rejected: (state) => {
-          state.isAuthenticated = false;
-          state.user = undefined;
-          state.isAuthLoading = false;
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-        },
-      },
-    ),
+  async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("No token found");
+    }
+    // We just check that the token is valid.
+    await api.fetchAuth();
+    return { success: true };
+  },
+  {
+    pending: (state) => {
+      state.isAuthLoading = true;
+    },
+    fulfilled: (state) => {
+      state.isAuthenticated = true;
+      state.isAuthLoading = false;
+      localStorage.setItem("is_authenticated", "true");
+    },
+    rejected: (state) => {
+      state.isAuthenticated = false;
+      state.user = undefined;
+      state.isAuthLoading = false;
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("is_authenticated");
+    },
+  },
+),
 
     // Get current user data
     getMe: create.asyncThunk(
@@ -206,6 +202,7 @@ uploadAvatarFile: create.asyncThunk(
           // Always remove tokens on logout
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
         }
       },
       {
