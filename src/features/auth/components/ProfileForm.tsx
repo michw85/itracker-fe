@@ -6,7 +6,7 @@ import {
   selectUser,
   updateProfile,
   updateAvatarUrl,
-  uploadAvatarFile,
+  // uploadAvatarFile,
 } from "../slice/authSlice";
 
 const ProfileForm = () => {
@@ -28,9 +28,8 @@ const ProfileForm = () => {
     },
     validationSchema: Yup.object({
       displayName: Yup.string().required("Display name is required"),
-      email: Yup.string()
-        .email("Invalid email address")
-        .required("Email is required"),
+      email: Yup.string().email("Invalid email address"),
+      //    .required("Email is required"),
       bio: Yup.string().max(1000, "Bio must be at max 1000 characters"),
       position: Yup.string(),
       department: Yup.string(),
@@ -40,11 +39,16 @@ const ProfileForm = () => {
       const { avatarUrl, ...profileData } = values;
 
       const result = await dispatch(updateProfile(profileData));
-
+      console.log("avatarUrl:", avatarUrl);
+      console.log("selectedFile:", selectedFile);
       if (avatarUrl) {
         if (selectedFile) {
-          // fails no PC
-          await dispatch(uploadAvatarFile(selectedFile));
+          await dispatch(
+            updateAvatarUrl(
+              "https://pngimg.com/uploads/under_construction/under_construction_PNG68.png",
+            ),
+          );
+          // await dispatch(uploadAvatarFile(selectedFile));   // Fertige 3S
         } else {
           // URL
           await dispatch(updateAvatarUrl(avatarUrl));
@@ -110,6 +114,10 @@ const ProfileForm = () => {
                 id="avatarUrl"
                 type="text"
                 {...formik.getFieldProps("avatarUrl")}
+                onChange={(e) => {
+                  formik.setFieldValue("avatarUrl", e.target.value);
+                  setSelectedFile(null);
+                }}
                 className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
                   formik.touched.avatarUrl && formik.errors.avatarUrl
                     ? "border-red-500 focus:ring-red-500"
@@ -177,7 +185,7 @@ const ProfileForm = () => {
             id="email"
             type="email"
             {...formik.getFieldProps("email")}
-            disabled={!isEditing}
+            disabled // ={!isEditing}
             className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring disabled:bg-gray-50 disabled:text-gray-500 ${
               formik.touched.email && formik.errors.email
                 ? "border-red-500 focus:ring-red-500"

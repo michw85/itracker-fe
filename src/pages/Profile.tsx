@@ -15,7 +15,7 @@ const Profile = () => {
       return;
     }
     dispatch(getMe());
-  }, []);
+  }, [dispatch, isAuthenticated, navigate]);
 
   return <ProfileForm />;
 };

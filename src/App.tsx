@@ -17,6 +17,8 @@ import {
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
 
+const AUTH_STORAGE_KEY = "is_authenticated";
+
 function App() {
   const dispatch = useAppDispatch<AppDispatch>();
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
