@@ -8,17 +8,17 @@ import Projects from "./pages/Projects";
 import AcceptInvite from "./pages/AcceptInvite";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import { useEffect } from "react";
-import type { AppDispatch, RootState } from "./app/store";
-import { useSelector } from "react-redux";
 import {
   checkAuth,
   getMe,
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
-
+import type { AppDispatch, RootState } from "./app/store";
+import { useSelector } from "react-redux";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 const AUTH_STORAGE_KEY = "is_authenticated";
-
 function App() {
   const dispatch = useAppDispatch<AppDispatch>();
   const isAuthLoading = useAppSelector(selectIsAuthLoading);
@@ -37,10 +37,10 @@ function App() {
     const initAuth = async () => {
       console.log("🔵 Initializing auth...");
       console.log("🔵 Token exists:", !!localStorage.getItem("accessToken"));
-      
+
       const result = await dispatch(checkAuth());
       console.log("🟢 checkAuth result:", result);
-      
+
       if (checkAuth.fulfilled.match(result)) {
         console.log("🟢 checkAuth fulfilled, loading user data...");
         const meResult = await dispatch(getMe());
@@ -49,7 +49,7 @@ function App() {
         console.log("🔴 checkAuth rejected");
       }
     };
-    
+
     initAuth();
   }, [dispatch]);
 
@@ -64,7 +64,7 @@ function App() {
       </div>
     );
   }
-  
+
   return (
     <div>
       <nav></nav>
@@ -75,6 +75,8 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
         </Routes>

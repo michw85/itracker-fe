@@ -5,7 +5,9 @@ const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
 const AUTH_PATH = "/users/profile/me";
 const LOGOUT_PATH = "/auth/logout";
-const ME_PATH = "/users/profile/me";
+export const ME_PATH = "/auth/me";
+const FORGOT_PASSWORD_PATH = "/auth/forgot-password";
+const RESET_PASSWORD_PATH = "/auth/reset-password";
 
 export const fetchMe = async () => {
   const res = await axiosInstance.get(ME_PATH);
@@ -37,6 +39,18 @@ export const fetchLogout = async () => {
   return res.data;
 };
 
+export const forgotPassword = async (email: string) => {
+  const res = await axiosInstance.post(FORGOT_PASSWORD_PATH, { email });
+  return res.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const res = await axiosInstance.post(RESET_PASSWORD_PATH, {
+    token,
+    newPassword,
+  });
+  return res.data;
+};
 // POST /me/avatar/url
 export const fetchUpdateAvatarUrl = async (avatarUrl: string) => {
   const res = await axiosInstance.post("/users/profile/me/avatar/url",
