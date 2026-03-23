@@ -171,6 +171,27 @@ export const authSlice = createAppSlice({
         },
       },
     ),
+updateAvatarUrl: create.asyncThunk(
+  async (avatarUrl: string) => {
+    return api.fetchUpdateAvatarUrl(avatarUrl);
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+  }
+),
+
+uploadAvatarFile: create.asyncThunk(
+  async (file: File) => {
+    return api.fetchUploadAvatarFile(file);
+  },
+  {
+    fulfilled: (state, action) => {
+      state.user = action.payload;
+    },
+  }
+),
 
     // Logout
     logout: create.asyncThunk(
@@ -202,7 +223,8 @@ export const authSlice = createAppSlice({
   },
 });
 
-export const { login, register, logout, checkAuth, getMe, updateProfile } =
+// // Action creators are generated for each case reducer function.
+export const { login, register, logout, checkAuth, getMe, updateProfile, updateAvatarUrl, uploadAvatarFile } =
   authSlice.actions;
 
 export const {
