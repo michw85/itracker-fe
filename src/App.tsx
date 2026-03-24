@@ -15,10 +15,6 @@ import {
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
 import UIKit from "./pages/UIKit";
-function App() {
-  const dispatch = useAppDispatch();
-  const isAuthLoading = useAppSelector(selectIsAuthLoading);
-
 import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
