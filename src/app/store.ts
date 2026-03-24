@@ -36,3 +36,7 @@ export type AppThunk<ThunkReturnType = void> = ThunkAction<
   unknown,
   Action
 >;
+if (process.env.NODE_ENV === "development") {
+  // @ts-expect-error - adding store to window for debugging
+  window.store = store;
+}
