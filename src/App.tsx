@@ -14,6 +14,7 @@ import {
   selectIsAuthLoading,
 } from "./features/auth/slice/authSlice";
 import Profile from "./pages/Profile";
+import UIKit from "./pages/UIKit";
 import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -72,6 +73,7 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/ui-kit" element={<UIKit />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
