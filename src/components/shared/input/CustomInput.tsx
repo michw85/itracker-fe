@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Field, FieldDescription, FieldLabel } from "../../ui/field";
+import { useState, type ReactNode } from "react";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "../../ui/field";
 import { Input } from "../../ui/input";
 import type React from "react";
 import { Button } from "../../ui/button";
@@ -13,10 +18,10 @@ export type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   required?: boolean;
   disabled?: boolean;
   isViewSwitcher?: boolean;
-  error?: string | boolean;
-  description?: string;
+  error?: ReactNode | boolean;
+  description?: ReactNode;
   className?: string;
-}
+};
 
 export const CustomInput: React.FC<CustomInputProps> = ({
   name,
@@ -40,8 +45,8 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   return (
     <Field data-invalid={error ? true : false}>
       {label && (
-        <FieldLabel htmlFor={id}>
-          {label} {required && <span className="text-destructive">*</span>}
+        <FieldLabel for={id}>
+          {label}{required && <span className="text-destructive"> *</span>}
         </FieldLabel>
       )}
       <div className="relative">
@@ -52,7 +57,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           required={required}
           disabled={disabled}
           className={className}
-          aria-invalid={error ? true : false}
+          aria-invalid={!!error}
           {...props}
         />
         {isPassword && isViewSwitcher && (
@@ -68,9 +73,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         )}
       </div>
       {description && <FieldDescription>{description}</FieldDescription>}
-      {error && (
-        <FieldDescription className="text-red-500">{error}</FieldDescription>
-      )}
+      {error && <FieldError>{error}</FieldError>}
     </Field>
   );
 };

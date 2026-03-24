@@ -24,19 +24,55 @@ import {
 } from "../components/ui/card";
 import { Plus, Trash2, Trash2Icon, TriangleAlert } from "lucide-react";
 import { Separator } from "../components/ui/separator";
-import { CustomCheckbox, CustomInput } from "../components/shared";
+import {
+  CustomCheckbox,
+  CustomInput,
+  CustomSelect,
+} from "../components/shared";
 
 export default function UIKit() {
+  const items = [
+    { label: "Select a fruit", value: null },
+    { label: "Apple", value: "apple" },
+    { label: "Banana", value: "banana" },
+    { label: "Blueberry", value: "blueberry" },
+    { label: "Grapes", value: "grapes" },
+    { label: "Pineapple", value: "pineapple" },
+  ];
+
   return (
     <div className="space-y-4">
       <h3 className="text-3xl font-semibold tracking-tight">Input</h3>
       <CustomInput />
+      <CustomInput type="password" isViewSwitcher />
+      <CustomInput disabled />
       <CustomInput label="Email" />
-      <CustomInput label="Name" error="Error" />
       <CustomInput
         label="Name"
         placeholder="Entry your name"
-        defaultValue="Vitalii"
+      />
+      <CustomInput
+        label="Title"
+        placeholder="Entry title"
+        required
+        description={
+          <ul className="ml-6 list-disc">
+            <li>1st level of puns: 5 gold coins</li>
+            <li>2nd level of jokes: 10 gold coins</li>
+            <li>3rd level of one-liners : 20 gold coins</li>
+          </ul>
+        }
+      />
+      <CustomInput
+        label="Name"
+        id="name_id"
+        error={
+          <ul className="ml-6 list-disc">
+            <li>1st level of puns: 5 gold coins</li>
+            <li>2nd level of jokes: 10 gold coins</li>
+            <li>3rd level of one-liners : 20 gold coins</li>
+          </ul>
+        }
       />
       <CustomInput
         type="password"
@@ -46,63 +82,134 @@ export default function UIKit() {
         placeholder="Entry password"
         required
         isViewSwitcher
-        description="The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        disabled
+        description={
+          <ul className="ml-6 list-disc">
+            <li>1st level of puns: 5 gold coins</li>
+            <li>2nd level of jokes: 10 gold coins</li>
+            <li>3rd level of one-liners : 20 gold coins</li>
+          </ul>
+        }
+        error={
+          <ul className="ml-6 list-disc">
+            <li>1st level of puns: 5 gold coins</li>
+            <li>2nd level of jokes: 10 gold coins</li>
+            <li>3rd level of one-liners : 20 gold coins</li>
+          </ul>
+        }
+      />
+
+      <h3 className="text-3xl font-semibold tracking-tight">Select</h3>
+      <CustomSelect items={items} />
+      <CustomSelect
+        label="Fruit"
+        items={items}
+        defaultValue="banana"
+        description="Select a fruit"
+      />
+      <CustomSelect
+        id="fruit_id"
+        label="Fruit"
+        items={items}
+        defaultValue="apple"
+        required
+        description="Select a fruit"
+        error="Error! Select a fruit"
+        alignItemWithTrigger={false}
+      />
+      <CustomSelect
+        id="fruit2_id"
+        label="Fruit"
+        items={items}
+        defaultValue="apple"
+        required
+        description={<b><i>"Select a fruit"</i></b>}
+        error={<b><i>"Error! Select a fruit"</i></b>}
+        disabled
+        alignItemWithTrigger={false}
       />
 
       <h3 className="text-3xl font-semibold tracking-tight">Button</h3>
       <Separator className="mb-10" />
       <Button size="lg">Default</Button>
+
       <Button>Default</Button>
+
       <Button size="sm">Default</Button>
+
       <Button size="xs">Default</Button>
       <br />
+
       <Button variant="link" size="lg">
         Link
       </Button>
+
       <Button variant="link">Link</Button>
+
       <Button variant="link" size="sm">
         Link
       </Button>
+
       <Button variant="link" size="xs">
         Link
       </Button>
       <br />
+
       <Button variant="destructive" size="lg">
         destructive
       </Button>
+
       <Button variant="destructive">destructive</Button>
+
       <Button variant="destructive" size="sm">
         destructive
       </Button>
+
       <Button variant="destructive" size="xs">
         destructive
       </Button>
       <br />
+
       <Button variant="outline" size="lg">
         Outline
       </Button>
+
       <Button variant="outline">Outline</Button>
+
       <Button variant="outline" size="sm">
         Outline
       </Button>
+
       <Button variant="outline" size="xs">
         Outline
       </Button>
       <br />
+
       <Button variant="secondary">Secondary</Button>
       <br />
+
       <Button variant="ghost">Ghost</Button>
       <br />
+
       <Button size="icon">
         <Trash2 />
       </Button>
+
       <Button size="icon" variant="outline">
         <Plus />
       </Button>
+
       <Button size="icon" variant="destructive">
         <TriangleAlert />
       </Button>
-      <a href="https://lucide.dev/icons/" className="hover:underline" target="_blank">Icons</a>
+
+      <a
+        href="https://lucide.dev/icons/"
+        className="hover:underline"
+        target="_blank"
+      >
+        Icons
+      </a>
 
       <h3 className="text-3xl font-semibold tracking-tight">Checkbox</h3>
       <Separator className="mb-10" />
@@ -112,6 +219,7 @@ export default function UIKit() {
         id="checkbox_2"
         name="checkbox_2"
         label="Terms and conditions"
+        required
       />
       <CustomCheckbox
         id="checkbox_3"
@@ -120,11 +228,17 @@ export default function UIKit() {
         description="Mandatory conditions"
       />
       <CustomCheckbox
-        id="checkbox_3"
-        name="checkbox_3"
+        id="checkbox_4"
+        name="checkbox_4"
         label="Terms and conditions"
-        description="Mandatory conditions"
-        error
+        description={<a href="#">"Mandatory conditions"</a>}
+        error={
+          <ul className="ml-6 list-disc">
+            <li>1st level of puns: 5 gold coins</li>
+            <li>2nd level of jokes: 10 gold coins</li>
+            <li>3rd level of one-liners : 20 gold coins</li>
+          </ul>
+        }
       />
 
       <h3 className="text-3xl font-semibold tracking-tight">Badge</h3>
