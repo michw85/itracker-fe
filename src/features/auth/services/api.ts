@@ -3,19 +3,19 @@ import type { Credentials, User } from "../types";
 
 const LOGIN_PATH = "/auth/login";
 const REGISTER_PATH = "/users/register";
-const AUTH_PATH = "/users/profile/me";
+const AUTH_ME_PATH = "/users/profile/me";
 const LOGOUT_PATH = "/auth/logout";
 export const ME_PATH = "/auth/me";
 const FORGOT_PASSWORD_PATH = "/auth/forgot-password";
 const RESET_PASSWORD_PATH = "/auth/reset-password";
 
 export const fetchMe = async () => {
-  const res = await axiosInstance.get(ME_PATH);
+  const res = await axiosInstance.get(AUTH_ME_PATH);
   return res.data;
 };
 
 export const fetchUpdateProfile = async (dto: Partial<User>) => {
-  const res = await axiosInstance.put(ME_PATH, dto, { withCredentials: true });
+  const res = await axiosInstance.put(AUTH_ME_PATH, dto);
   return res.data;
 };
 
@@ -30,7 +30,7 @@ export const fetchRegister = async (credentials: Credentials) => {
 };
 
 export const fetchAuth = async () => {
-  const res = await axiosInstance.get(AUTH_PATH);
+  const res = await axiosInstance.get(AUTH_ME_PATH);
   return res.data;
 };
 
@@ -51,21 +51,20 @@ export const resetPassword = async (token: string, newPassword: string) => {
   });
   return res.data;
 };
-// POST /me/avatar/url
+// Swagger: POST /api/v1/users/profile/me/avatar/url
 export const fetchUpdateAvatarUrl = async (avatarUrl: string) => {
-  const res = await axiosInstance.post("/users/profile/me/avatar/url",
-    { avatarUrl }, { withCredentials: true });
+  const res = await axiosInstance.post(`${AUTH_ME_PATH}/avatar/url`, {
+    avatarUrl,
+  });
   return res.data;
 };
 
-// POST /me/avatar   File
+// Swagger: POST /api/v1/users/profile/me/avatar
 export const fetchUploadAvatarFile = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await axiosInstance.post("/users/profile/me/avatar",
-    formData, { 
-      withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+  const res = await axiosInstance.post(`${AUTH_ME_PATH}/avatar`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return res.data;
 };
