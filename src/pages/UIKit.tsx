@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { Plus, SquareArrowOutUpRight, Trash2, Trash2Icon, TriangleAlert } from "lucide-react";
+import { Plus, Trash2, Trash2Icon, TriangleAlert } from "lucide-react";
 import { Separator } from "../components/ui/separator";
 import { CustomCheckbox, CustomInput } from "../components/shared";
 
