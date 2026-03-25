@@ -2,16 +2,28 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { register } from "../slice/authSlice";
 import { useAppDispatch } from "../../../app/hooks";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { BackendErrorResponse } from "../types";
+import { Button } from "../../../components/ui/button";
+import { CustomInput } from "../../../components/shared";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 
 const RegistrationForm = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const[serverPasswordErrors, setServerPasswordErrors] = useState<string[]>([]);
-  const[serverFormError, setServerFormError] = useState<string | null>(null);
+  const [serverPasswordErrors, setServerPasswordErrors] = useState<string[]>(
+    [],
+  );
+  const [serverFormError, setServerFormError] = useState<string | null>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -38,13 +50,15 @@ const RegistrationForm = () => {
       }
 
       if (register.rejected.match(dispatchResult)) {
-        const payload = dispatchResult.payload as BackendErrorResponse | undefined;
+        const payload = dispatchResult.payload as
+          | BackendErrorResponse
+          | undefined;
 
         if (payload) {
           setServerFormError(payload.message || "Registration failed");
 
           const passwordError = payload.errors?.find(
-            (error) => error.field === "password"
+            (error) => error.field === "password",
           );
 
           if (passwordError?.messages.length) {
@@ -60,91 +74,63 @@ const RegistrationForm = () => {
   });
 
   return (
-    <div className="mx-auto max-w-sm space-y-6 p-6 rounded-lg border bg-white shadow-sm mt-10">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Create an account
-        </h1>
-        <p className="text-sm text-muted-foreground text-gray-500">
-          Enter your email and password to register
-        </p>
-      </div>
-      <form onSubmit={formik.handleSubmit} className="space-y-4">
-        {serverFormError && (
-          <p className="text-sm text-red-500">{serverFormError}</p>
-        )}
-        {/* Email Field */}
-        <div className="space-y-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+    <Card className="w-full max-w-sm mx-auto mt-10">
+      <CardHeader>
+        <CardTitle>Create an account</CardTitle>
+        <CardDescription>
+          Enter your email address below, which will be used to log in to your
+          account.
+        </CardDescription>
+        <CardAction>
+          <Link
+            to="/login"
+            className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
           >
-            Email
-          </label>
-          <input
+            Sign in
+          </Link>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={formik.handleSubmit} className="flex flex-col gap-6">
+          {serverFormError && (
+            <p className="text-sm text-red-500">{serverFormError}</p>
+          )}
+          {/* Email Field */}
+          <CustomInput
             id="email"
             type="email"
+            label="Email"
+            placeholder="Enter your email"
             {...formik.getFieldProps("email")}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              formik.touched.email && formik.errors.email
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
-            placeholder="you@example.com"
+            error={formik.errors.email}
           />
-          {formik.touched.email && formik.errors.email && (
-            <p className="text-sm text-red-500">{formik.errors.email}</p>
-          )}
-        </div>
 
-        {/* Password Field */}
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
+          {/* Password Field */}
+          <CustomInput
             id="password"
             type="password"
-            value={formik.values.password}
-            onChange={(e) => {
-              if (serverPasswordErrors.length > 0 || serverFormError) {
-                setServerPasswordErrors([]);
-                setServerFormError(null);
-              }
-              formik.handleChange(e);
-            }}
-            onBlur={formik.handleBlur}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              (formik.touched.password && formik.errors.password) ||
-              serverPasswordErrors.length > 0
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
-            placeholder="••••••••"
+            isViewSwitcher
+            label="Password"
+            placeholder="Create a password"
+            {...formik.getFieldProps("password")}
+            error={
+              formik.touched.password && formik.errors.password ? (
+                <p className="text-sm text-red-500">{formik.errors.password}</p>
+              ) : serverPasswordErrors.length > 0 ? (
+                <ul className="ml-6 list-disc">
+                  {serverPasswordErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              ) : null
+            }
           />
-          {formik.touched.password && formik.errors.password ? (
-            <p className="text-sm text-red-500">{formik.errors.password}</p>
-          ) : serverPasswordErrors.length > 0 ? (
-            <ul className="text-sm text-red-500 space-y-1">
-              {serverPasswordErrors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-        >
-          Register
-        </button>
-      </form>
-    </div>
+          <Button type="submit" className="w-full">
+            Register
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -3,6 +3,16 @@ import * as Yup from "yup";
 import { login, selectLoginError } from "../slice/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import { Link, useNavigate } from "react-router-dom";
+import { CustomInput } from "../../../components/shared";
+import { Button } from "../../../components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 
 const LoginForm = () => {
   const dispatch = useAppDispatch();
@@ -32,84 +42,60 @@ const LoginForm = () => {
   });
 
   return (
-    <div className="mx-auto max-w-sm space-y-6 p-6 rounded-lg border bg-white shadow-sm mt-10">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground text-gray-500">
+    <Card className="w-full max-w-sm mx-auto mt-10">
+      <CardHeader>
+        <CardTitle>Sign in</CardTitle>
+        <CardDescription>
           Enter your email and password to sign in
-        </p>
-        {loginError && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-            {loginError}
-          </div>
-        )}
-      </div>
-      <form onSubmit={formik.handleSubmit} className="space-y-4">
-        {/* Email Field */}
-        <div className="space-y-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...formik.getFieldProps("email")}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              formik.touched.email && formik.errors.email
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
-            placeholder="you@example.com"
-          />
-          {formik.touched.email && formik.errors.email && (
-            <p className="text-sm text-red-500">{formik.errors.email}</p>
-          )}
-        </div>
-
-        {/* Password Field */}
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...formik.getFieldProps("password")}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              formik.touched.password && formik.errors.password
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
-            placeholder="••••••••"
-          />
-          {formik.touched.password && formik.errors.password && (
-            <p className="text-sm text-red-500">{formik.errors.password}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-        >
-          Sign in
-        </button>
-        <div className="text-center mt-4">
+        </CardDescription>
+        <CardAction>
           <Link
-            to="/forgot-password"
+            to="/register"
             className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
           >
-            Forgot password?
+            Sign up
           </Link>
-        </div>
-      </form>
-    </div>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={formik.handleSubmit} className="flex flex-col gap-6">
+          {loginError && (
+            <div className="text-sm text-red-500">{loginError}</div>
+          )}
+          {/* Email Field */}
+          <CustomInput
+            id="email"
+            type="email"
+            label="Email"
+            placeholder="Enter your email"
+            {...formik.getFieldProps("email")}
+            error={formik.errors.email}
+          />
+
+          {/* Password Field */}
+          <CustomInput
+            id="password"
+            type="password"
+            isViewSwitcher
+            label="Password"
+            placeholder="Enter your password"
+            {...formik.getFieldProps("password")}
+            error={formik.errors.password}
+          />
+          <Button type="submit" className="w-full">
+            Sing in
+          </Button>
+          <div className="text-center">
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-gray-500 hover:text-black transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
