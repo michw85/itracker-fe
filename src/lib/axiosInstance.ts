@@ -3,6 +3,7 @@ import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
   type AxiosRequestConfig,
+  type AxiosError
 } from "axios";
 
 const axiosInstance: AxiosInstance = axios.create({
