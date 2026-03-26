@@ -28,6 +28,18 @@ export const fetchCreateProject = async (projectDto: CreateProjectDto) => {
   return res.data;
 };
 
+// Update project
+export const fetchUpdateProject = async (projectId: string, data: { title: string; description: string }): Promise<ProjectSummary> => {
+  const res = await axiosInstance.post(`${PROJECTS_BASE_PATH}/${projectId}/update`, data);
+  return res.data;
+};
+
+// Delete Project
+export const fetchDeleteProject = async (projectId: string) => {
+  const res = await axiosInstance.delete(`${PROJECTS_BASE_PATH}/${projectId}`);
+  return res.data;
+};
+
 // Get project members
 export const fetchProjectMembers = async (projectId: string) => {
   const res = await axiosInstance.get(

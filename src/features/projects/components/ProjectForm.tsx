@@ -5,12 +5,22 @@ import {
   createProject,
   selectCreateProjectErrorMessage,
 } from "../slice/projectsSlice";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import {
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
 
 interface ProjectFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ onSuccess }) => {
+const ProjectForm: React.FC<ProjectFormProps> = ({ onSuccess, onCancel }) => {
   const dispatch = useAppDispatch();
   const projectError = useAppSelector(selectCreateProjectErrorMessage);
 
@@ -20,56 +30,52 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ onSuccess }) => {
       description: "",
     },
     validationSchema: Yup.object({
-      title: Yup.string().required("Title is required"),
-      description: Yup.string().required("Description is required"),
+      title: Yup.string()
+        .min(3, "Title must be at least 3 characters")
+        .required("Title is required"),
+      description: Yup.string()
+        .min(3, "Description must be at least 3 characters")
+        .required("Description is required"),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
       console.log("🔵 Submitting project:", values);
       try {
         const result = await dispatch(createProject(values)).unwrap();
         console.log("🟢 Project created:", result);
-        if (onSuccess) {
-          onSuccess();
-        }
-        formik.resetForm();
+        resetForm();
+        onSuccess?.();
       } catch (error) {
         console.error("🔴 Error creating project:", error);
+      } finally {
+        setSubmitting(false);
       }
     },
   });
 
   return (
-    <div className="mx-auto max-w-sm space-y-6 p-6 rounded-lg border bg-white shadow-sm mt-10">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">New Project</h1>
-        <p className="text-sm text-gray-500">
-          Enter the project title and description
-        </p>
-        {projectError && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-            {projectError}
-          </div>
-        )}
-      </div>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>New Project</DialogTitle>
+      </DialogHeader>
+
+      {projectError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          {projectError}
+        </div>
+      )}
 
       <form onSubmit={formik.handleSubmit} className="space-y-4">
-        {/* Title */}
         <div className="space-y-2">
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Title
-          </label>
-          <input
+          <Label htmlFor="title">Title</Label>
+          <Input
             id="title"
             type="text"
             {...formik.getFieldProps("title")}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
+            className={
               formik.touched.title && formik.errors.title
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
+                ? "border-red-500"
+                : ""
+            }
             placeholder="New Website Development"
           />
           {formik.touched.title && formik.errors.title && (
@@ -77,39 +83,36 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ onSuccess }) => {
           )}
         </div>
 
-        {/* Description */}
         <div className="space-y-2">
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Description
-          </label>
-          <textarea
+          <Label htmlFor="description">Description</Label>
+          <Textarea
             id="description"
-            {...formik.getFieldProps("description")}
-            className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring ${
-              formik.touched.description && formik.errors.description
-                ? "border-red-500 focus:ring-red-500"
-                : "border-input"
-            }`}
-            placeholder="A Project to develop a new company website"
             rows={4}
+            {...formik.getFieldProps("description")}
+            className={
+              formik.touched.description && formik.errors.description
+                ? "border-red-500"
+                : ""
+            }
+            placeholder="A Project to develop a new company website"
           />
           {formik.touched.description && formik.errors.description && (
             <p className="text-sm text-red-500">{formik.errors.description}</p>
           )}
         </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-        >
-          Create Project
-        </button>
+        <div className="flex justify-end gap-3 pt-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={formik.isSubmitting}>
+            {formik.isSubmitting ? "Creating..." : "Create Project"}
+          </Button>
+        </div>
       </form>
-    </div>
+    </DialogContent>
   );
 };
 

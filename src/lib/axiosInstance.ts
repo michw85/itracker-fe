@@ -7,7 +7,7 @@ import axios, {
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: "/api/v1",
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
