@@ -7,6 +7,7 @@ import {
   resendInvite,
   revokeInvite,
   clearInviteMessages,
+  deleteProject,
   selectProjectSummaries,
   selectCurrentProject,
   selectProjectMembers,
@@ -14,13 +15,30 @@ import {
   selectInviteSuccessMessage,
   selectInviteErrorMessage,
 } from "../slice/projectsSlice";
-import ProjectSummaryCard from "./ProjectSummaryCard";
+import ProjectCard from "./ProjectCard";
 import InviteUserForm from "./InviteUserForm";
 import MembersList from "./MembersList";
 import ProjectForm from "./ProjectForm";
+import EditProjectForm from "./EditProjectForm";
 import { selectUser } from "../../../features/auth/slice/authSlice";
 import * as api from "../services/api";
 import type { ProjectSummary } from "../types";
+import { Button } from "../../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+} from "../../../components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
+
+interface ProjectWithRole {
+  project: ProjectSummary;
+  role: string | null;
+}
 
 const ProjectsDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -32,9 +50,14 @@ const ProjectsDashboard: React.FC = () => {
   const successMessage = useAppSelector(selectInviteSuccessMessage);
   const errorMessage = useAppSelector(selectInviteErrorMessage);
 
+  const [projectsWithRoles, setProjectsWithRoles] = useState<ProjectWithRole[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("my-projects");
+  const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Load project summaries on mount
   useEffect(() => {
@@ -48,6 +71,40 @@ const ProjectsDashboard: React.FC = () => {
     };
   }, [dispatch]);
 
+  // Load roles for all projects when summaries or user changes
+  useEffect(() => {
+    const loadRoles = async () => {
+      if (!summaries.length || !user) {
+        setLoadingRoles(false);
+        return;
+      }
+
+      setLoadingRoles(true);
+      try {
+        const roles = await Promise.all(
+          summaries.map(async (project) => {
+            try {
+              const roleData = await api.checkUserRole(project.id);
+              console.log(`✅ Project: "${project.title}" (${project.id}) - Role: ${roleData.role}`);
+              return { project, role: roleData.role };
+            } catch (error) {
+              console.error(`❌ Error loading role for project ${project.id}:`, error);
+              return { project, role: null };
+            }
+          }),
+        );
+        setProjectsWithRoles(roles);
+        console.log("Roles summary:", roles.map(r => ({ title: r.project.title, role: r.role })));
+      } catch (error) {
+        console.error("Error loading roles:", error);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    loadRoles();
+  }, [summaries, user]);
+
   // Load user role and members when project is selected
   useEffect(() => {
     if (!currentProject?.id || !user) return;
@@ -55,14 +112,8 @@ const ProjectsDashboard: React.FC = () => {
     const loadProjectData = async () => {
       setRoleLoading(true);
       try {
-        console.log(`🔵 Loading role for project: ${currentProject.id}`);
-
-        // Get role from backend
         const roleData = await api.checkUserRole(currentProject.id);
-        console.log("🟢 User role from API:", roleData);
         setUserRole(roleData.role);
-
-        // Get members from backend
         await dispatch(getProjectMembers(currentProject.id)).unwrap();
       } catch (error) {
         console.error("Error loading project data:", error);
@@ -77,10 +128,73 @@ const ProjectsDashboard: React.FC = () => {
 
   const canInvite = userRole === "OWNER" || userRole === "ADMIN";
 
+  // We share projects
+  const myProjects = projectsWithRoles.filter(
+    ({ role }) => role === "OWNER" || role === "ADMIN",
+  );
+
+  const invitedProjects = projectsWithRoles.filter(
+    ({ role }) => role === "MEMBER" || role === "VIEWER",
+  );
+
   const handleProjectSelect = (project: ProjectSummary) => {
     dispatch(setCurrentProject(project));
     setShowNewProjectForm(false);
   };
+
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      await dispatch(deleteProject(projectId)).unwrap();
+      await dispatch(getProjectSummaries());
+      if (currentProject?.id === projectId) {
+        dispatch(setCurrentProject(undefined));
+      }
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+    }
+  };
+
+  const handleEditProject = async (project: ProjectSummary) => {
+    try {
+      const roleData = await api.checkUserRole(project.id);
+      console.log("User role for edit:", roleData.role);
+
+      if (roleData.role !== "OWNER" && roleData.role !== "ADMIN") {
+        alert("You don't have permission to edit this project");
+        return;
+      }
+
+      setEditingProject(project);
+      setEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error checking permissions:", error);
+      alert("Could not verify permissions");
+    }
+  };
+
+  const handleManageMembers = (project: ProjectSummary) => {
+    dispatch(setCurrentProject(project));
+    setActiveTab("members");
+  };
+
+  const handleProjectCreated = async () => {
+    setShowNewProjectForm(false);
+    
+    // Loading an updated list of projects
+    await dispatch(getProjectSummaries());
+    
+    // We wait a bit for the summaries to update, then force a reload of the roles.
+    setTimeout(() => {
+      setLoadingRoles(true);
+    }, 100);
+  };
+
+  // Debug pins
+  console.log("📊 summaries count:", summaries.length);
+  console.log("📊 projectsWithRoles count:", projectsWithRoles.length);
+  console.log("📊 loadingRoles:", loadingRoles);
+  console.log("📊 myProjects count:", myProjects.length);
+  console.log("📊 invitedProjects count:", invitedProjects.length);
 
   if (isLoading && summaries.length === 0) {
     return (
@@ -93,28 +207,23 @@ const ProjectsDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header */}
+      {/* Header with New Project Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-        <button
-          onClick={() => setShowNewProjectForm(!showNewProjectForm)}
-          className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-        >
+        <Button onClick={() => setShowNewProjectForm(true)}>
           New project
-        </button>
+        </Button>
       </div>
 
-      {/* New Project Form */}
-      {showNewProjectForm && (
-        <div className="mb-6">
-          <ProjectForm
-            onSuccess={() => {
-              setShowNewProjectForm(false);
-              dispatch(getProjectSummaries()); // Refresh projects list
-            }}
+      {/* New Project Dialog */}
+      <Dialog open={showNewProjectForm} onOpenChange={setShowNewProjectForm}>
+        <DialogContent className="sm:max-w-md">
+          <ProjectForm 
+            onSuccess={handleProjectCreated}
+            onCancel={() => setShowNewProjectForm(false)}
           />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Success/Error Messages */}
       {successMessage && (
@@ -132,23 +241,76 @@ const ProjectsDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Project Cards */}
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {summaries.map((project) => (
-              <ProjectSummaryCard
-                key={project.id}
-                project={project}
-                onClick={() => handleProjectSelect(project)}
-                isSelected={currentProject?.id === project.id}
-              />
-            ))}
-          </div>
-
-          {summaries.length === 0 && !isLoading && (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-500">
-                No projects yet. Create your first project!
-              </p>
+          {loadingRoles ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+              <span className="ml-2 text-gray-500">
+                Loading project roles...
+              </span>
             </div>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="mb-4">
+                <TabsTrigger value="my-projects">
+                  My Projects ({myProjects.length})
+                </TabsTrigger>
+                <TabsTrigger value="invited-projects">
+                  Invited ({invitedProjects.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="my-projects">
+                {myProjects.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500">
+                      No projects yet. Create your first project!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {myProjects.map(({ project, role }) => (
+                      <ProjectCard
+                        key={project.id}
+                        project={project}
+                        userRole={role}
+                        onDelete={handleDeleteProject}
+                        onEdit={handleEditProject}
+                        onManageMembers={handleManageMembers}
+                        onClick={() => handleProjectSelect(project)}
+                        isSelected={currentProject?.id === project.id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="invited-projects">
+                {invitedProjects.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500">No invited projects yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {invitedProjects.map(({ project, role }) => (
+                      <ProjectCard
+                        key={project.id}
+                        project={project}
+                        userRole={role}
+                        onDelete={handleDeleteProject}
+                        onEdit={handleEditProject}
+                        onManageMembers={handleManageMembers}
+                        onClick={() => handleProjectSelect(project)}
+                        isSelected={currentProject?.id === project.id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
 
@@ -178,13 +340,6 @@ const ProjectsDashboard: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
-
-              {/* Debug Info - can be removed after setup */}
-              <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-                <p>User role: {userRole || "Not loaded"}</p>
-                <p>Can invite: {canInvite ? "Yes" : "No"}</p>
-                <p>Members count: {members.length}</p>
               </div>
 
               {/* Role Loading */}
@@ -229,6 +384,23 @@ const ProjectsDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Project Dialog */}
+      {editingProject && (
+        <EditProjectForm
+          project={editingProject}
+          open={editDialogOpen}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) {
+              setTimeout(() => setEditingProject(null), 300);
+            }
+          }}
+          onSuccess={() => {
+            dispatch(getProjectSummaries());
+          }}
+        />
+      )}
     </div>
   );
 };

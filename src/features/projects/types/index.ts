@@ -45,6 +45,8 @@ export interface ProjectsSliceState {
   currentProject?: ProjectSummary;
   members: ProjectMember[];
   createProjectErrorMessage?: string;
+  updateProjectErrorMessage?: string;
+  updateProjectSuccessMessage?: string;
   inviteErrorMessage?: string;
   inviteSuccessMessage?: string;
   acceptInviteMessage?: string;

@@ -19,6 +19,7 @@ import type { AppDispatch, RootState } from "./app/store";
 import { useSelector } from "react-redux";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProjectDetails from "./pages/ProjectDetails";
 const AUTH_STORAGE_KEY = "is_authenticated";
 function App() {
   const dispatch = useAppDispatch<AppDispatch>();
@@ -77,6 +78,9 @@ function App() {
           <Route path="/register" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetails />} />
+<Route path="/projects/:id/edit" element={<div>Edit Project (coming soon)</div>} />
+<Route path="/projects/:id/members" element={<div>Manage Members (coming soon)</div>} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<Profile />} />

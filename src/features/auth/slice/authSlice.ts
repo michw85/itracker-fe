@@ -27,19 +27,23 @@ export const authSlice = createAppSlice({
   reducers: (create) => ({
     // Login with JWT
     login: create.asyncThunk(
-      async (credentials: Credentials) => {
+      async (credentials: Credentials, { dispatch }) => {
         const response = (await api.fetchLogin(credentials)) as AuthResponse;
+        console.log("🔵 Login response:", response);
 
         // Save tokens on successful login
         if (response.accessToken) {
           localStorage.setItem("accessToken", response.accessToken);
+          console.log("✅ Access token saved:", response.accessToken);
         }
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken);
+          console.log("✅ Refresh token saved");
         }
         // Save the authentication flag
         localStorage.setItem("is_authenticated", "true");
 
+        await dispatch(getMe());
         return response;
       },
       {
@@ -51,11 +55,13 @@ export const authSlice = createAppSlice({
           state.isAuthenticated = true;
           state.user = action.payload.user;
           state.loginErrorMessage = undefined;
+          console.log("✅ Login fulfilled, user:", action.payload.user);
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
           state.user = undefined;
           state.loginErrorMessage = action.error.message || "Login failed";
+          console.error("❌ Login rejected:", action.error);
 
           // Remove tokens on error
           localStorage.removeItem("accessToken");
@@ -108,34 +114,34 @@ export const authSlice = createAppSlice({
 
     // Check authentication status
     checkAuth: create.asyncThunk(
-  async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      throw new Error("No token found");
-    }
-    // We just check that the token is valid.
-    await api.fetchAuth();
-    return { success: true };
-  },
-  {
-    pending: (state) => {
-      state.isAuthLoading = true;
-    },
-    fulfilled: (state) => {
-      state.isAuthenticated = true;
-      state.isAuthLoading = false;
-      localStorage.setItem("is_authenticated", "true");
-    },
-    rejected: (state) => {
-      state.isAuthenticated = false;
-      state.user = undefined;
-      state.isAuthLoading = false;
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("is_authenticated");
-    },
-  },
-),
+      async () => {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          throw new Error("No token found");
+        }
+        // We just check that the token is valid.
+        await api.fetchAuth();
+        return { success: true };
+      },
+      {
+        pending: (state) => {
+          state.isAuthLoading = true;
+        },
+        fulfilled: (state) => {
+          state.isAuthenticated = true;
+          state.isAuthLoading = false;
+          localStorage.setItem("is_authenticated", "true");
+        },
+        rejected: (state) => {
+          state.isAuthenticated = false;
+          state.user = undefined;
+          state.isAuthLoading = false;
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("is_authenticated");
+        },
+      },
+    ),
 
     // Get current user data
     getMe: create.asyncThunk(
@@ -171,27 +177,27 @@ export const authSlice = createAppSlice({
         },
       },
     ),
-updateAvatarUrl: create.asyncThunk(
-  async (avatarUrl: string) => {
-    return api.fetchUpdateAvatarUrl(avatarUrl);
-  },
-  {
-    fulfilled: (state, action) => {
-      state.user = action.payload;
-    },
-  }
-),
+    updateAvatarUrl: create.asyncThunk(
+      async (avatarUrl: string) => {
+        return api.fetchUpdateAvatarUrl(avatarUrl);
+      },
+      {
+        fulfilled: (state, action) => {
+          state.user = action.payload;
+        },
+      },
+    ),
 
-uploadAvatarFile: create.asyncThunk(
-  async (file: File) => {
-    return api.fetchUploadAvatarFile(file);
-  },
-  {
-    fulfilled: (state, action) => {
-      state.user = action.payload;
-    },
-  }
-),
+    uploadAvatarFile: create.asyncThunk(
+      async (file: File) => {
+        return api.fetchUploadAvatarFile(file);
+      },
+      {
+        fulfilled: (state, action) => {
+          state.user = action.payload;
+        },
+      },
+    ),
 
     // Logout
     logout: create.asyncThunk(
@@ -224,8 +230,16 @@ uploadAvatarFile: create.asyncThunk(
 });
 
 // // Action creators are generated for each case reducer function.
-export const { login, register, logout, checkAuth, getMe, updateProfile, updateAvatarUrl, uploadAvatarFile } =
-  authSlice.actions;
+export const {
+  login,
+  register,
+  logout,
+  checkAuth,
+  getMe,
+  updateProfile,
+  updateAvatarUrl,
+  uploadAvatarFile,
+} = authSlice.actions;
 
 export const {
   selectIsAuthenticated,

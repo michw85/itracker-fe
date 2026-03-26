@@ -39,14 +39,23 @@ export const projectsSlice = createAppSlice({
       },
       {
         pending: (state) => {
+          if (!state) return;
           state.isLoading = true;
         },
         fulfilled: (state, action) => {
-          state.isLoading = false;
-          state.projectSummaries = action.payload;
-          console.log("✅ Summaries loaded:", state.projectSummaries.length);
+          if (!state) return;
+          try {
+            const newSummaries = action.payload || [];
+            state.projectSummaries = [...newSummaries];
+            state.isLoading = false;
+            console.log("✅ Summaries loaded:", state.projectSummaries.length);
+          } catch (error) {
+            console.error("Error in getProjectSummaries.fulfilled:", error);
+            state.isLoading = false;
+          }
         },
         rejected: (state, action) => {
+          if (!state) return;
           state.isLoading = false;
           state.projectSummaries = [];
           console.error("❌ Failed to load summaries:", action.payload);
@@ -172,6 +181,213 @@ export const projectsSlice = createAppSlice({
         },
       },
     ),
+
+    // Update project
+    updateProject: create.asyncThunk(
+      async (
+        {
+          id,
+          title,
+          description,
+        }: { id: string; title: string; description: string },
+        { rejectWithValue },
+      ) => {
+        console.log(`🔵 Updating project: ${id}`);
+        try {
+          const data = await api.fetchUpdateProject(id, { title, description });
+          console.log("🟢 Project updated:", data);
+          return data;
+        } catch (error) {
+          console.error("🔴 Error updating project:", error);
+          const apiError = error as AxiosError<{ message?: string }>;
+          return rejectWithValue(
+            apiError.response?.data?.message ||
+              apiError.message ||
+              "Failed to update project",
+          );
+        }
+      },
+      {
+        pending: (state) => {
+          if (!state) return;
+          state.updateProjectErrorMessage = "";
+          state.updateProjectSuccessMessage = "";
+          state.isLoading = true;
+        },
+        fulfilled: (state, action) => {
+          if (!state) return;
+
+          try {
+            const updatedProject = action.payload;
+
+            if (!updatedProject?.id) {
+              console.error("Invalid project data", updatedProject);
+              return;
+            }
+
+            // Create a deep copy for a safe update
+            const newProjects = state.projects ? [...state.projects] : [];
+            const projectIndex = newProjects.findIndex(
+              (p) => p.id === updatedProject.id,
+            );
+            if (projectIndex !== -1) {
+              newProjects[projectIndex] = {
+                ...newProjects[projectIndex],
+                ...updatedProject,
+              };
+            }
+
+            const newSummaries = state.projectSummaries
+              ? [...state.projectSummaries]
+              : [];
+            const summaryIndex = newSummaries.findIndex(
+              (p) => p.id === updatedProject.id,
+            );
+            if (summaryIndex !== -1) {
+              newSummaries[summaryIndex] = {
+                ...newSummaries[summaryIndex],
+                title: updatedProject.title,
+                description: updatedProject.description,
+              };
+            }
+
+            let newCurrentProject = state.currentProject;
+            if (
+              newCurrentProject &&
+              newCurrentProject.id === updatedProject.id
+            ) {
+              newCurrentProject = {
+                ...newCurrentProject,
+                title: updatedProject.title,
+                description: updatedProject.description,
+              };
+            }
+
+            // Применяем все изменения сразу
+            state.projects = newProjects;
+            state.projectSummaries = newSummaries;
+            state.currentProject = newCurrentProject;
+            state.isLoading = false;
+            state.updateProjectSuccessMessage = "Project updated successfully!";
+
+            setTimeout(() => {
+              if (state) state.updateProjectSuccessMessage = "";
+            }, 3000);
+          } catch (error) {
+            console.error("Error in updateProject.fulfilled:", error);
+            state.isLoading = false;
+          }
+        },
+        rejected: (state, action) => {
+          if (!state) return;
+          state.isLoading = false;
+          state.updateProjectErrorMessage = action.payload as string;
+
+          setTimeout(() => {
+            if (state) state.updateProjectErrorMessage = "";
+          }, 3000);
+        },
+      },
+    ),
+
+    // Clear update messages
+    clearUpdateMessages: create.reducer((state) => {
+      state.updateProjectErrorMessage = "";
+      state.updateProjectSuccessMessage = "";
+    }),
+
+    // delete Project
+    deleteProject: create.asyncThunk(
+      async (projectId: string, { rejectWithValue }) => {
+        console.log(`🔵 Deleting project: ${projectId}`);
+        try {
+          await api.fetchDeleteProject(projectId);
+          return projectId;
+        } catch (error) {
+          console.error("🔴 Error deleting project:", error);
+          const apiError = error as AxiosError<{ message?: string }>;
+          return rejectWithValue(
+            apiError.response?.data?.message ||
+              apiError.message ||
+              "Failed to delete project",
+          );
+        }
+      },
+      {
+        pending: (state) => {
+          if (!state) return;
+          state.isLoading = true;
+        },
+        fulfilled: (state, action) => {
+          if (!state) return;
+          state.isLoading = false;
+          if (state.projects) {
+            state.projects = state.projects.filter(
+              (p) => p.id !== action.payload,
+            );
+          }
+          if (state.projectSummaries) {
+            state.projectSummaries = state.projectSummaries.filter(
+              (p) => p.id !== action.payload,
+            );
+          }
+          if (state.currentProject?.id === action.payload) {
+            state.currentProject = undefined;
+          }
+          state.inviteSuccessMessage = "Project deleted successfully!";
+          setTimeout(() => {
+            if (state) state.inviteSuccessMessage = "";
+          }, 3000);
+        },
+        rejected: (state, action) => {
+          if (!state) return;
+          state.isLoading = false;
+          state.createProjectErrorMessage = action.payload as string;
+          setTimeout(() => {
+            if (state) state.createProjectErrorMessage = "";
+          }, 3000);
+        },
+      },
+    ),
+
+    // Get project by ID
+    getProjectById: create.asyncThunk(
+      async (projectId: string, { rejectWithValue }) => {
+        console.log(`🔵 Fetching project by ID: ${projectId}`);
+        try {
+          const data = await api.fetchProjectById(projectId);
+          console.log("🟢 Project data:", data);
+          return data;
+        } catch (error) {
+          console.error("🔴 Error fetching project:", error);
+          const apiError = error as AxiosError<{ message?: string }>;
+          return rejectWithValue(
+            apiError.response?.data?.message ||
+              apiError.message ||
+              "Failed to fetch project",
+          );
+        }
+      },
+      {
+        pending: (state) => {
+          state.isLoading = true;
+        },
+        fulfilled: (state, action) => {
+          state.isLoading = false;
+          state.currentProject = action.payload;
+        },
+        rejected: (state, action) => {
+          state.isLoading = false;
+          state.currentProject = undefined;
+          console.error("❌ Failed to load project:", action.payload);
+        },
+      },
+    ),
+
+    // Clear current project
+    clearCurrentProject: create.reducer((state) => {
+      state.currentProject = undefined;
+    }),
 
     // Invite a user to the project
     inviteUser: create.asyncThunk(
@@ -329,6 +545,9 @@ export const projectsSlice = createAppSlice({
     selectCurrentProject: (state) => state.currentProject,
     selectIsLoading: (state) => state.isLoading,
     selectCreateProjectErrorMessage: (state) => state.createProjectErrorMessage,
+    selectUpdateProjectErrorMessage: (state) => state.updateProjectErrorMessage,
+    selectUpdateProjectSuccessMessage: (state) =>
+      state.updateProjectSuccessMessage,
     selectInviteErrorMessage: (state) => state.inviteErrorMessage,
     selectInviteSuccessMessage: (state) => state.inviteSuccessMessage,
     selectAcceptInviteMessage: (state) => state.acceptInviteMessage,
@@ -337,7 +556,11 @@ export const projectsSlice = createAppSlice({
 
 export const {
   createProject,
+  updateProject,
+  deleteProject,
   getAllProjects,
+  getProjectById,
+  clearCurrentProject,
   getProjectSummaries,
   getProjectMembers,
   inviteUser,
@@ -345,6 +568,7 @@ export const {
   resendInvite,
   revokeInvite,
   clearInviteMessages,
+  clearUpdateMessages,
   setCurrentProject,
 } = projectsSlice.actions;
 
@@ -355,6 +579,8 @@ export const {
   selectCurrentProject,
   selectIsLoading,
   selectCreateProjectErrorMessage,
+  selectUpdateProjectErrorMessage,
+  selectUpdateProjectSuccessMessage,
   selectInviteErrorMessage,
   selectInviteSuccessMessage,
   selectAcceptInviteMessage,
