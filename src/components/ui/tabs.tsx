@@ -31,7 +31,7 @@ export function Tabs({
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
       if (child.type === TabsList || child.type === TabsContent) {
-        return React.cloneElement(child as React.ReactElement<any>, {
+        return React.cloneElement(child as React.ReactElement<{ activeValue: string; onValueChange: (value: string) => void }>, {
           activeValue,
           onValueChange: handleValueChange,
         });
@@ -54,7 +54,7 @@ export function TabsList({ children, className = "", activeValue, onValueChange 
   // Передаем контекст триггерам
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child) && child.type === TabsTrigger) {
-      return React.cloneElement(child as React.ReactElement<any>, {
+      return React.cloneElement(child as React.ReactElement<{ activeValue: string; onValueChange: (value: string) => void }>, {
         activeValue,
         onValueChange,
       });
