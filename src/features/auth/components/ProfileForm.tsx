@@ -6,7 +6,7 @@ import {
   selectUser,
   updateProfile,
   updateAvatarUrl,
-  // uploadAvatarFile,
+  uploadAvatarFile,
 } from "../slice/authSlice";
 
 const ProfileForm = () => {
@@ -35,32 +35,30 @@ const ProfileForm = () => {
       department: Yup.string(),
       avatarUrl: Yup.string().nullable(),
     }),
-    onSubmit: async (values) => {
-      const { avatarUrl, ...profileData } = values;
+onSubmit: async (values) => {
+  const { avatarUrl, ...profileData } = values;
 
-      const result = await dispatch(updateProfile(profileData));
-      console.log("avatarUrl:", avatarUrl);
-      console.log("selectedFile:", selectedFile);
-      if (avatarUrl) {
-        if (selectedFile) {
-          await dispatch(
-            updateAvatarUrl(
-              "https://pngimg.com/uploads/under_construction/under_construction_PNG68.png",
-            ),
-          );
-          // await dispatch(uploadAvatarFile(selectedFile));   // Fertige 3S
-        } else {
-          // URL
-          await dispatch(updateAvatarUrl(avatarUrl));
-        }
-      }
+  try {
+    //  Update profile
+    await dispatch(updateProfile(profileData)).unwrap();
 
-      if (updateProfile.fulfilled.match(result)) {
-        setIsEditing(false);
-        setSuccessMessage("Profile updated successfully!");
-        setTimeout(() => setSuccessMessage(undefined), 3000);
-      }
-    },
+    //  Avatar
+    if (selectedFile) {
+  
+      await dispatch(uploadAvatarFile(selectedFile)).unwrap();
+    } else if (avatarUrl) {
+      await dispatch(updateAvatarUrl(avatarUrl)).unwrap();
+    }
+
+    // UI
+    setIsEditing(false);
+    setSuccessMessage("Profile updated successfully!");
+    setTimeout(() => setSuccessMessage(undefined), 3000);
+  } catch (error) {
+    console.error("Profile update failed:", error);
+    setSuccessMessage("Failed to update profile.");
+  }
+}
   });
 
   return (
