@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 import type { ProjectSummary } from "../types";
+import { logger } from "../../../lib/logger";
 
 interface EditProjectFormProps {
   project: ProjectSummary | null;
@@ -55,7 +56,7 @@ const EditProjectForm: React.FC<EditProjectFormProps> = ({
     }),
     onSubmit: async (values) => {
       if (!project?.id) {
-        console.error("No project id");
+        logger.error("No project id");
         return;
       }
 
@@ -65,7 +66,7 @@ const EditProjectForm: React.FC<EditProjectFormProps> = ({
         onSuccess?.();
         onOpenChange(false);
       } catch (error) {
-        console.error("Error updating project:", error);
+        logger.error("Error updating project:", error);
         alert("Failed to update project. Please try again.");
       } finally {
         setIsSubmitting(false);

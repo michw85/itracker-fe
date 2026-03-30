@@ -7,6 +7,7 @@ import type {
 } from "../types";
 import * as api from "../services/api";
 import { AxiosError } from "axios";
+import { logger } from "../../../lib/logger";
 
 const initialState: ProjectsSliceState = {
   projects: [],
@@ -22,13 +23,11 @@ export const projectsSlice = createAppSlice({
     // Get project summaries for dashboard
     getProjectSummaries: create.asyncThunk(
       async (_, { rejectWithValue }) => {
-        console.log("🔵 Fetching project summaries...");
         try {
           const data = await api.fetchProjectSummaries();
-          console.log("🟢 Project summaries:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error fetching summaries:", error);
+          logger.error("Failed to fetch project summaries", error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -48,17 +47,15 @@ export const projectsSlice = createAppSlice({
             const newSummaries = action.payload || [];
             state.projectSummaries = [...newSummaries];
             state.isLoading = false;
-            console.log("✅ Summaries loaded:", state.projectSummaries.length);
           } catch (error) {
             console.error("Error in getProjectSummaries.fulfilled:", error);
             state.isLoading = false;
           }
         },
-        rejected: (state, action) => {
+        rejected: (state) => {
           if (!state) return;
           state.isLoading = false;
           state.projectSummaries = [];
-          console.error("❌ Failed to load summaries:", action.payload);
         },
       },
     ),
@@ -69,10 +66,9 @@ export const projectsSlice = createAppSlice({
         console.log("🔵 Fetching projects from API...");
         try {
           const data = await api.fetchProjects();
-          console.log("🟢 Projects from API:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error fetching projects:", error);
+          logger.error("Failed to fetch projects", error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -88,12 +84,10 @@ export const projectsSlice = createAppSlice({
         fulfilled: (state, action) => {
           state.isLoading = false;
           state.projects = action.payload;
-          console.log("✅ Projects loaded:", state.projects.length);
         },
-        rejected: (state, action) => {
+        rejected: (state) => {
           state.isLoading = false;
           state.projects = [];
-          console.error("❌ Failed to load projects:", action.payload);
         },
       },
     ),
@@ -101,13 +95,14 @@ export const projectsSlice = createAppSlice({
     // Get members of a specific project
     getProjectMembers: create.asyncThunk(
       async (projectId: string, { rejectWithValue }) => {
-        console.log(`🔵 Fetching members for project ${projectId}...`);
         try {
           const data = await api.fetchProjectMembers(projectId);
-          console.log(`🟢 Members for project ${projectId}:`, data);
           return data;
         } catch (error) {
-          console.error(`🔴 Error fetching members:`, error);
+          logger.error(
+            `Failed to fetch members for project ${projectId}`,
+            error,
+          );
           const apiError = error as AxiosError<{ message?: string }>;
 
           return rejectWithValue({
@@ -133,7 +128,6 @@ export const projectsSlice = createAppSlice({
           const payload = action.payload as { message?: string } | undefined;
           state.inviteErrorMessage =
             payload?.message || "Error loading members";
-          console.error("❌ Failed to load members:", action.payload);
         },
       },
     ),
@@ -144,10 +138,9 @@ export const projectsSlice = createAppSlice({
         console.log("🔵 Creating project:", dto);
         try {
           const data = await api.fetchCreateProject(dto);
-          console.log("🟢 Project created:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error creating project:", error);
+          logger.error("Failed to create project", error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -192,13 +185,11 @@ export const projectsSlice = createAppSlice({
         }: { id: string; title: string; description: string },
         { rejectWithValue },
       ) => {
-        console.log(`🔵 Updating project: ${id}`);
         try {
           const data = await api.fetchUpdateProject(id, { title, description });
-          console.log("🟢 Project updated:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error updating project:", error);
+          logger.error(`Failed to update project ${id}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -216,67 +207,58 @@ export const projectsSlice = createAppSlice({
         },
         fulfilled: (state, action) => {
           if (!state) return;
+          const updatedProject = action.payload;
 
-          try {
-            const updatedProject = action.payload;
-
-            if (!updatedProject?.id) {
-              console.error("Invalid project data", updatedProject);
-              return;
-            }
-
-            // Create a deep copy for a safe update
-            const newProjects = state.projects ? [...state.projects] : [];
-            const projectIndex = newProjects.findIndex(
-              (p) => p.id === updatedProject.id,
-            );
-            if (projectIndex !== -1) {
-              newProjects[projectIndex] = {
-                ...newProjects[projectIndex],
-                ...updatedProject,
-              };
-            }
-
-            const newSummaries = state.projectSummaries
-              ? [...state.projectSummaries]
-              : [];
-            const summaryIndex = newSummaries.findIndex(
-              (p) => p.id === updatedProject.id,
-            );
-            if (summaryIndex !== -1) {
-              newSummaries[summaryIndex] = {
-                ...newSummaries[summaryIndex],
-                title: updatedProject.title,
-                description: updatedProject.description,
-              };
-            }
-
-            let newCurrentProject = state.currentProject;
-            if (
-              newCurrentProject &&
-              newCurrentProject.id === updatedProject.id
-            ) {
-              newCurrentProject = {
-                ...newCurrentProject,
-                title: updatedProject.title,
-                description: updatedProject.description,
-              };
-            }
-
-            // Применяем все изменения сразу
-            state.projects = newProjects;
-            state.projectSummaries = newSummaries;
-            state.currentProject = newCurrentProject;
-            state.isLoading = false;
-            state.updateProjectSuccessMessage = "Project updated successfully!";
-
-            setTimeout(() => {
-              if (state) state.updateProjectSuccessMessage = "";
-            }, 3000);
-          } catch (error) {
-            console.error("Error in updateProject.fulfilled:", error);
-            state.isLoading = false;
+          if (!updatedProject?.id) {
+            return;
           }
+
+          const projectIndex = state.projects?.findIndex(
+            (p) => p.id === updatedProject.id,
+          );
+          if (
+            projectIndex !== undefined &&
+            projectIndex !== -1 &&
+            state.projects
+          ) {
+            state.projects[projectIndex] = {
+              ...state.projects[projectIndex],
+              ...updatedProject,
+            };
+          }
+
+          const summaryIndex = state.projectSummaries?.findIndex(
+            (p) => p.id === updatedProject.id,
+          );
+          if (
+            summaryIndex !== undefined &&
+            summaryIndex !== -1 &&
+            state.projectSummaries
+          ) {
+            state.projectSummaries[summaryIndex] = {
+              ...state.projectSummaries[summaryIndex],
+              title: updatedProject.title,
+              description: updatedProject.description,
+            };
+          }
+
+          if (
+            state.currentProject &&
+            state.currentProject.id === updatedProject.id
+          ) {
+            state.currentProject = {
+              ...state.currentProject,
+              title: updatedProject.title,
+              description: updatedProject.description,
+            };
+          }
+
+          state.isLoading = false;
+          state.updateProjectSuccessMessage = "Project updated successfully!";
+
+          setTimeout(() => {
+            if (state) state.updateProjectSuccessMessage = "";
+          }, 3000);
         },
         rejected: (state, action) => {
           if (!state) return;
@@ -299,12 +281,11 @@ export const projectsSlice = createAppSlice({
     // delete Project
     deleteProject: create.asyncThunk(
       async (projectId: string, { rejectWithValue }) => {
-        console.log(`🔵 Deleting project: ${projectId}`);
         try {
           await api.fetchDeleteProject(projectId);
           return projectId;
         } catch (error) {
-          console.error("🔴 Error deleting project:", error);
+          logger.error(`Failed to delete project ${projectId}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -353,13 +334,11 @@ export const projectsSlice = createAppSlice({
     // Get project by ID
     getProjectById: create.asyncThunk(
       async (projectId: string, { rejectWithValue }) => {
-        console.log(`🔵 Fetching project by ID: ${projectId}`);
         try {
           const data = await api.fetchProjectById(projectId);
-          console.log("🟢 Project data:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error fetching project:", error);
+          logger.error(`Failed to fetch project ${projectId}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -376,10 +355,9 @@ export const projectsSlice = createAppSlice({
           state.isLoading = false;
           state.currentProject = action.payload;
         },
-        rejected: (state, action) => {
+        rejected: (state) => {
           state.isLoading = false;
           state.currentProject = undefined;
-          console.error("❌ Failed to load project:", action.payload);
         },
       },
     ),
@@ -395,13 +373,11 @@ export const projectsSlice = createAppSlice({
         { projectId, dto }: { projectId: string; dto: InviteUserDto },
         { rejectWithValue },
       ) => {
-        console.log(`🔵 Inviting user to project ${projectId}:`, dto);
         try {
           const data = await api.fetchInviteUser(projectId, dto);
-          console.log("🟢 Invitation sent:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error inviting user:", error);
+          logger.error(`Failed to invite user to project ${projectId}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -428,13 +404,11 @@ export const projectsSlice = createAppSlice({
     // Accept invitation
     acceptInvite: create.asyncThunk(
       async (inviteToken: string, { rejectWithValue }) => {
-        console.log("🔵 Accepting invitation with token:", inviteToken);
         try {
           const data = await api.fetchAcceptInvite(inviteToken);
-          console.log("🟢 Invitation accepted:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error accepting invitation:", error);
+          logger.error("Failed to accept invitation", error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -464,13 +438,11 @@ export const projectsSlice = createAppSlice({
     // Resend invitation
     resendInvite: create.asyncThunk(
       async (invitationId: number, { rejectWithValue }) => {
-        console.log("🔵 Resending invitation:", invitationId);
         try {
           const data = await api.fetchResendInvite(invitationId);
-          console.log("🟢 Invitation resent:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error resending invitation:", error);
+          logger.error(`Failed to resend invitation ${invitationId}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||
@@ -498,13 +470,11 @@ export const projectsSlice = createAppSlice({
     // Revoke invitation
     revokeInvite: create.asyncThunk(
       async (invitationId: number, { rejectWithValue }) => {
-        console.log("🔵 Revoking invitation:", invitationId);
         try {
           const data = await api.fetchRevokeInvite(invitationId);
-          console.log("🟢 Invitation revoked:", data);
           return data;
         } catch (error) {
-          console.error("🔴 Error revoking invitation:", error);
+          logger.error(`Failed to revoke invitation ${invitationId}`, error);
           const apiError = error as AxiosError<{ message?: string }>;
           return rejectWithValue(
             apiError.response?.data?.message ||

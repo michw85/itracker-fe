@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import * as api from "../services/api";
 import { isAxiosError } from "axios";
+import { logger } from "../../../lib/logger";
 
 // Function for checking the presence of a token
 function checkToken() {
@@ -29,16 +30,13 @@ export const authSlice = createAppSlice({
     login: create.asyncThunk(
       async (credentials: Credentials, { dispatch }) => {
         const response = (await api.fetchLogin(credentials)) as AuthResponse;
-        console.log("🔵 Login response:", response);
 
         // Save tokens on successful login
         if (response.accessToken) {
           localStorage.setItem("accessToken", response.accessToken);
-          console.log("✅ Access token saved:", response.accessToken);
         }
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken);
-          console.log("✅ Refresh token saved");
         }
         // Save the authentication flag
         localStorage.setItem("is_authenticated", "true");
@@ -55,13 +53,11 @@ export const authSlice = createAppSlice({
           state.isAuthenticated = true;
           state.user = action.payload.user;
           state.loginErrorMessage = undefined;
-          console.log("✅ Login fulfilled, user:", action.payload.user);
         },
         rejected: (state, action) => {
           state.isAuthenticated = false;
           state.user = undefined;
           state.loginErrorMessage = action.error.message || "Login failed";
-          console.error("❌ Login rejected:", action.error);
 
           // Remove tokens on error
           localStorage.removeItem("accessToken");
@@ -146,19 +142,16 @@ export const authSlice = createAppSlice({
     // Get current user data
     getMe: create.asyncThunk(
       async () => {
-        console.log("🔵 Fetching user data...");
         const data = await api.fetchMe();
-        console.log("🟢 User data:", data);
         return data;
       },
       {
         fulfilled: (state, action) => {
           state.user = action.payload;
-          console.log("✅ User loaded:", action.payload);
         },
-        rejected: (state, action) => {
+        rejected: (state) => {
           state.user = undefined;
-          console.error("❌ Failed to load user:", action.error);
+          logger.error("Failed to load user");
         },
       },
     ),
@@ -172,8 +165,8 @@ export const authSlice = createAppSlice({
         fulfilled: (state, action) => {
           state.user = action.payload;
         },
-        rejected: (_, action) => {
-          console.error("❌ Failed to update profile:", action.error);
+        rejected: () => {
+          logger.error("Failed to update profile");
         },
       },
     ),
