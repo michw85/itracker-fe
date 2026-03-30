@@ -6,7 +6,6 @@ import {
   setCurrentProject,
   resendInvite,
   revokeInvite,
-  clearInviteMessages,
   deleteProject,
   selectProjectSummaries,
   selectCurrentProject,
@@ -20,20 +19,18 @@ import InviteUserForm from "./InviteUserForm";
 import MembersList from "./MembersList";
 import ProjectForm from "./ProjectForm";
 import EditProjectForm from "./EditProjectForm";
-import { selectUser } from "../../../features/auth/slice/authSlice";
+import { selectUser, getMe } from "../../../features/auth/slice/authSlice";
 import * as api from "../services/api";
 import type { ProjectSummary } from "../types";
 import { Button } from "../../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-} from "../../../components/ui/dialog";
+import { Dialog, DialogContent } from "../../../components/ui/dialog";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
+import { logger } from "../../../lib/logger";
 
 interface ProjectWithRole {
   project: ProjectSummary;
@@ -50,31 +47,42 @@ const ProjectsDashboard: React.FC = () => {
   const successMessage = useAppSelector(selectInviteSuccessMessage);
   const errorMessage = useAppSelector(selectInviteErrorMessage);
 
-  const [projectsWithRoles, setProjectsWithRoles] = useState<ProjectWithRole[]>([]);
+  const [projectsWithRoles, setProjectsWithRoles] = useState<ProjectWithRole[]>(
+    [],
+  );
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(false);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("my-projects");
-  const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectSummary | null>(
+    null,
+  );
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  // Load project summaries on mount
   useEffect(() => {
-    dispatch(getProjectSummaries());
-  }, [dispatch]);
-
-  // Clear messages when component unmounts
-  useEffect(() => {
-    return () => {
-      dispatch(clearInviteMessages());
+    const loadUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (token && !user) {
+        await dispatch(getMe());
+      }
     };
+    loadUser();
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        await dispatch(getProjectSummaries());
+      }
+    };
+    loadProjects();
   }, [dispatch]);
 
-  // Load roles for all projects when summaries or user changes
   useEffect(() => {
     const loadRoles = async () => {
-      if (!summaries.length || !user) {
+      if (!user || !summaries.length) {
         setLoadingRoles(false);
         return;
       }
@@ -85,18 +93,19 @@ const ProjectsDashboard: React.FC = () => {
           summaries.map(async (project) => {
             try {
               const roleData = await api.checkUserRole(project.id);
-              console.log(`✅ Project: "${project.title}" (${project.id}) - Role: ${roleData.role}`);
               return { project, role: roleData.role };
             } catch (error) {
-              console.error(`❌ Error loading role for project ${project.id}:`, error);
+              logger.error(
+                `Error loading role for project ${project.id}`,
+                error,
+              );
               return { project, role: null };
             }
           }),
         );
         setProjectsWithRoles(roles);
-        console.log("Roles summary:", roles.map(r => ({ title: r.project.title, role: r.role })));
       } catch (error) {
-        console.error("Error loading roles:", error);
+        logger.error("Error loading roles:", error);
       } finally {
         setLoadingRoles(false);
       }
@@ -105,7 +114,6 @@ const ProjectsDashboard: React.FC = () => {
     loadRoles();
   }, [summaries, user]);
 
-  // Load user role and members when project is selected
   useEffect(() => {
     if (!currentProject?.id || !user) return;
 
@@ -116,7 +124,7 @@ const ProjectsDashboard: React.FC = () => {
         setUserRole(roleData.role);
         await dispatch(getProjectMembers(currentProject.id)).unwrap();
       } catch (error) {
-        console.error("Error loading project data:", error);
+        logger.error("Error loading project data:", error);
         setUserRole(null);
       } finally {
         setRoleLoading(false);
@@ -128,7 +136,6 @@ const ProjectsDashboard: React.FC = () => {
 
   const canInvite = userRole === "OWNER" || userRole === "ADMIN";
 
-  // We share projects
   const myProjects = projectsWithRoles.filter(
     ({ role }) => role === "OWNER" || role === "ADMIN",
   );
@@ -150,14 +157,13 @@ const ProjectsDashboard: React.FC = () => {
         dispatch(setCurrentProject(undefined));
       }
     } catch (error) {
-      console.error("Failed to delete project:", error);
+      logger.error("Failed to delete project:", error);
     }
   };
 
   const handleEditProject = async (project: ProjectSummary) => {
     try {
       const roleData = await api.checkUserRole(project.id);
-      console.log("User role for edit:", roleData.role);
 
       if (roleData.role !== "OWNER" && roleData.role !== "ADMIN") {
         alert("You don't have permission to edit this project");
@@ -167,7 +173,7 @@ const ProjectsDashboard: React.FC = () => {
       setEditingProject(project);
       setEditDialogOpen(true);
     } catch (error) {
-      console.error("Error checking permissions:", error);
+      logger.error("Error checking permissions:", error);
       alert("Could not verify permissions");
     }
   };
@@ -179,22 +185,11 @@ const ProjectsDashboard: React.FC = () => {
 
   const handleProjectCreated = async () => {
     setShowNewProjectForm(false);
-    
-    // Loading an updated list of projects
     await dispatch(getProjectSummaries());
-    
-    // We wait a bit for the summaries to update, then force a reload of the roles.
     setTimeout(() => {
       setLoadingRoles(true);
     }, 100);
   };
-
-  // Debug pins
-  console.log("📊 summaries count:", summaries.length);
-  console.log("📊 projectsWithRoles count:", projectsWithRoles.length);
-  console.log("📊 loadingRoles:", loadingRoles);
-  console.log("📊 myProjects count:", myProjects.length);
-  console.log("📊 invitedProjects count:", invitedProjects.length);
 
   if (isLoading && summaries.length === 0) {
     return (
@@ -207,25 +202,20 @@ const ProjectsDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header with New Project Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-        <Button onClick={() => setShowNewProjectForm(true)}>
-          New project
-        </Button>
+        <Button onClick={() => setShowNewProjectForm(true)}>New project</Button>
       </div>
 
-      {/* New Project Dialog */}
       <Dialog open={showNewProjectForm} onOpenChange={setShowNewProjectForm}>
         <DialogContent className="sm:max-w-md">
-          <ProjectForm 
+          <ProjectForm
             onSuccess={handleProjectCreated}
             onCancel={() => setShowNewProjectForm(false)}
           />
         </DialogContent>
       </Dialog>
 
-      {/* Success/Error Messages */}
       {successMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
           {successMessage}
@@ -237,9 +227,7 @@ const ProjectsDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Project Cards */}
         <div className="lg:col-span-2">
           {loadingRoles ? (
             <div className="flex justify-center py-8">
@@ -314,11 +302,9 @@ const ProjectsDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column - Project Details */}
         <div className="lg:col-span-1">
           {currentProject ? (
             <div className="bg-white rounded-lg border border-gray-200 p-5 sticky top-4">
-              {/* Project Info */}
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">
                   {currentProject.title}
@@ -342,7 +328,6 @@ const ProjectsDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Role Loading */}
               {roleLoading && (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
@@ -350,14 +335,12 @@ const ProjectsDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* Invite Form - Only for OWNER/ADMIN */}
               {!roleLoading && canInvite && (
                 <div className="mb-6">
                   <InviteUserForm projectId={currentProject.id} />
                 </div>
               )}
 
-              {/* Members List */}
               {!roleLoading && (
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-3">
@@ -385,7 +368,6 @@ const ProjectsDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit Project Dialog */}
       {editingProject && (
         <EditProjectForm
           project={editingProject}

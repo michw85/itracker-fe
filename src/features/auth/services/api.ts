@@ -21,7 +21,6 @@ export const fetchUpdateProfile = async (dto: Partial<User>) => {
 
 export const fetchLogin = async (credentials: Credentials) => {
   const res = await axiosInstance.post(LOGIN_PATH, credentials);
-  console.log("🔵 Login API response:", res.data);
   return res.data;
 };
 

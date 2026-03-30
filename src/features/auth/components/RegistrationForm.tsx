@@ -41,10 +41,9 @@ const RegistrationForm = () => {
     onSubmit: async (values, { setSubmitting }) => {
       setServerPasswordErrors([]);
       setServerFormError(null);
-      console.log("registration");
       const dispatchResult = await dispatch(register(values));
       if (register.fulfilled.match(dispatchResult)) {
-        // if successful, it wiil navigate to login page
+        // if successful, it will navigate to login page
         navigate("/login");
         return;
       }

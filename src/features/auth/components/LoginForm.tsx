@@ -37,7 +37,6 @@ const LoginForm = () => {
       if (login.fulfilled.match(result)) {
         navigate("/projects");
       }
-      // см в форме регистрации как сделать редирект в случае успешного выполнения запроса
     },
   });
 
