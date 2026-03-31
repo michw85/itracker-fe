@@ -3,10 +3,13 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
   getProjectById,
-  clearInviteMessages,
+  clearCurrentProject,
   selectCurrentProject,
 } from "../features/projects/slice/projectsSlice";
 import * as api from "../features/projects/services/api";
+import ColumnManager from "../features/projects/components/ColumnManager";
+import TasksBoard from "../features/projects/components/TasksBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +20,7 @@ const ProjectDetails: React.FC = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("tasks");
 
   useEffect(() => {
     if (!id) {
@@ -29,13 +33,9 @@ const ProjectDetails: React.FC = () => {
       setError(null);
       
       try {
-        // Load project by ID
         await dispatch(getProjectById(id)).unwrap();
-        
-        // Load user role
         const roleData = await api.checkUserRole(id);
         setUserRole(roleData.role);
-        
       } catch (err) {
         console.error("Error loading project:", err);
         setError("Failed to load project details");
@@ -47,9 +47,12 @@ const ProjectDetails: React.FC = () => {
     loadProjectData();
     
     return () => {
-      dispatch(clearInviteMessages());
+      dispatch(clearCurrentProject());
     };
   }, [id, dispatch, navigate]);
+
+  const isOwner = userRole === "OWNER";
+  const isAdmin = userRole === "ADMIN";
 
   if (isLoading) {
     return (
@@ -77,7 +80,7 @@ const ProjectDetails: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Link
@@ -111,15 +114,27 @@ const ProjectDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Tasks Section - Coming Soon */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold mb-4">Tasks</h2>
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">
-            Task management coming soon...
-          </p>
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="tasks">Tasks Board</TabsTrigger>
+          {(isOwner || isAdmin) && (
+            <TabsTrigger value="columns">Columns</TabsTrigger>
+          )}
+        </TabsList>
+
+        <TabsContent value="tasks">
+          <TasksBoard />
+        </TabsContent>
+
+        {(isOwner || isAdmin) && (
+          <TabsContent value="columns">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <ColumnManager projectId={project.id} isOwner={isOwner} />
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };
