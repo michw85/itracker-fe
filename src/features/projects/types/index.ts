@@ -52,3 +52,5 @@ export interface ProjectsSliceState {
   acceptInviteMessage?: string;
   isLoading: boolean;
 }
+
+export * from "./column";
