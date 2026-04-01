@@ -1,3 +1,18 @@
+import { 
+  Users, 
+  Code2, 
+  Bug, 
+  Coffee, 
+  Layout, 
+  Kanban, 
+  GitBranch, 
+  Sparkles,
+  TestTube,
+  FileCode,
+  Layers,
+  BarChart
+} from "lucide-react";
+
 const teamMembers = [
   // Team Lead
   { name: "Alisher Khamidov", role: "Team Lead / Full-stack Developer", type: "lead" },
@@ -23,39 +38,33 @@ export default function About() {
 
   const features = [
     {
+      icon: Layout,
       title: "Project Management",
       description: "Create and manage multiple projects, invite team members, and assign roles",
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
+      icon: Kanban,
       title: "Kanban Board",
       description: "Visual task board with customizable columns: To Do, In Progress, Review, Done",
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
     {
+      icon: GitBranch,
       title: "Role-Based Access",
       description: "Fine-grained permissions: OWNER, ADMIN, MEMBER, VIEWER for each project",
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
+      icon: Sparkles,
       title: "Real-time Updates",
       description: "Instant updates when tasks are moved or updated across the team",
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
-  ];
-
-  const frontendTech = [
-    "React 19 with TypeScript",
-    "Tailwind CSS + shadcn/ui",
-    "Redux Toolkit",
-    "Formik + Yup",
-    "Axios",
-    "Vite",
-  ];
-
-  const backendTech = [
-    "Spring Boot 3",
-    "Spring Security with JWT",
-    "Spring Data JPA + MySQL",
-    "Mail service with Freemarker",
-    "MapStruct",
-    "OpenAPI (Swagger)",
   ];
 
   return (
@@ -78,6 +87,9 @@ export default function About() {
               key={index}
               className="border border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors"
             >
+              <div className={`w-10 h-10 ${feature.bgColor} rounded-lg flex items-center justify-center mb-3`}>
+                <feature.icon className={`h-5 w-5 ${feature.color}`} />
+              </div>
               <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
               <p className="text-gray-600 text-sm">{feature.description}</p>
             </div>
@@ -85,38 +97,64 @@ export default function About() {
         </div>
       </div>
 
-      {/* Tech Stack */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Frontend</h2>
-          <ul className="space-y-2">
-            {frontendTech.map((tech, index) => (
-              <li key={index} className="text-gray-600 text-sm flex items-center gap-2">
-                <span className="text-gray-400">•</span>
-                {tech}
-              </li>
-            ))}
-          </ul>
+      {/* Tech Stack - 3 columns */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Frontend */}
+        <div className="bg-white rounded-lg border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <Code2 className="h-6 w-6 text-blue-600" />
+            <h2 className="text-xl font-semibold">Frontend</h2>
+          </div>
+          <div className="space-y-2 text-gray-600">
+            <p>⚛️ React 19 with TypeScript</p>
+            <p>🎨 Tailwind CSS + shadcn/ui</p>
+            <p>📦 Redux Toolkit for state management</p>
+            <p>🔄 Formik + Yup for forms</p>
+            <p>🔌 Axios for API calls</p>
+            <p>🎯 Vite for blazing fast builds</p>
+          </div>
         </div>
 
-        <div className="border border-gray-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Backend</h2>
-          <ul className="space-y-2">
-            {backendTech.map((tech, index) => (
-              <li key={index} className="text-gray-600 text-sm flex items-center gap-2">
-                <span className="text-gray-400">•</span>
-                {tech}
-              </li>
-            ))}
-          </ul>
+        {/* Backend */}
+        <div className="bg-white rounded-lg border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <Bug className="h-6 w-6 text-green-600" />
+            <h2 className="text-xl font-semibold">Backend</h2>
+          </div>
+          <div className="space-y-2 text-gray-600">
+            <p>☕ Spring Boot 3</p>
+            <p>🔐 Spring Security with JWT</p>
+            <p>🗄️ Spring Data JPA + MySQL</p>
+            <p>📧 Mail service with Freemarker</p>
+            <p>🛠️ MapStruct for DTO mapping</p>
+            <p>📝 OpenAPI (Swagger) documentation</p>
+          </div>
+        </div>
+
+        {/* QA Tech Stack */}
+        <div className="bg-white rounded-lg border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <TestTube className="h-6 w-6 text-purple-600" />
+            <h2 className="text-xl font-semibold">Quality Assurance</h2>
+          </div>
+          <div className="space-y-2 text-gray-600">
+            <p>🧪 Playwright — E2E testing framework</p>
+            <p>📘 TypeScript — test language</p>
+            <p>📚 Page Object Model — test organization pattern</p>
+            <p>📊 Allure — test reporting</p>
+          </div>
         </div>
       </div>
 
       {/* Team Section */}
       <div className="space-y-8">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Development Team</h2>
-          <p className="text-gray-500 text-sm">
+          <div className="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
+            <Users className="h-4 w-4" />
+            <span className="text-sm font-medium">Development Team</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mt-4">Meet the Team</h2>
+          <p className="text-gray-500 text-sm mt-1">
             {teamMembers.length} passionate professionals making task management better
           </p>
         </div>
@@ -203,6 +241,7 @@ export default function About() {
 
       {/* Quote */}
       <div className="border-t border-gray-200 pt-8 text-center">
+        <Coffee className="h-5 w-5 mx-auto text-gray-400 mb-3" />
         <p className="text-gray-500 italic text-sm max-w-2xl mx-auto">
           "Built with passion, powered by coffee. We're committed to creating tools that make teamwork effortless and enjoyable."
         </p>
