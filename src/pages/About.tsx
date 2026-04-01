@@ -7,10 +7,7 @@ import {
   Kanban, 
   GitBranch, 
   Sparkles,
-  TestTube,
-  FileCode,
-  Layers,
-  BarChart
+  TestTube
 } from "lucide-react";
 
 const teamMembers = [
