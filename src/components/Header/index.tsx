@@ -39,12 +39,12 @@ export default function Header() {
           <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
             <img
               src="/public/images/Logo.png"
-              alt="ITrecker logo"
+              alt="ITracker logo"
               className="w-full h-full object-contain"
             />
           </div>
           <span className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-emerald-600 transition-colors">
-            <span className="text-emerald-500">IT</span>recker
+            <span className="text-emerald-500">IT</span>racker
           </span>
         </Link>
 
